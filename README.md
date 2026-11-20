@@ -14,6 +14,16 @@ Os dados vêm **direto da API de Marketing do Meta**, que é gratuita, a cada ab
 
 ---
 
+## Variações de visualização
+
+Além do painel principal (`/`), há três variações que usam os mesmos dados e o mesmo cache (uma consulta por conta e período, compartilhada entre elas):
+
+- `/v1` · **Central de análise**: campanhas na lateral, ranking em tabela e ficha completa do criativo ao clicar.
+- `/v2` · **Apresentação**: números grandes, pódio dos 3 melhores e matriz de decisão. Feita para reunião.
+- `/v3` · **Comparador**: diagnóstico em texto, verba por sinal e até 3 criativos lado a lado.
+
+Para trocar o painel principal por uma delas, renomeie o arquivo escolhido para `index.html`. Todas dependem de `nucleo.js`.
+
 ## Configuração (uma vez só)
 
 ### 1. Dar acesso às contas no Meta
