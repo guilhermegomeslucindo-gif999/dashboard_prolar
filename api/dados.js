@@ -52,8 +52,8 @@ module.exports = async function handler(req, res) {
     body.periodo = { start, end };
     body.contas = CONTAS.map((c) => ({ slug: c.slug, nome: c.nome, tema: c.tema }));
     body.gerado_em = new Date().toISOString();
-    // Cache na Vercel: 15 min "fresco"; depois mostra a última versão na hora enquanto atualiza por trás.
-    return send(res, 200, body, q.fresh ? 'no-store' : 's-maxage=900, stale-while-revalidate=86400');
+    // Cache na Vercel de 5 minutos: um Ctrl+Shift+R mostra no máximo 5 minutos de atraso (o botão Atualizar busca na hora).
+    return send(res, 200, body, q.fresh ? 'no-store' : 's-maxage=300');
   } catch (err) {
     return send(res, err.status || 500, { error: err.message || 'Erro ao buscar os dados.', code: err.code || null });
   }

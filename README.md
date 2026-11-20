@@ -9,7 +9,7 @@ Painel de **performance dos criativos** no Meta Ads, feito pela QH4.
 - Clicar na capa abre a prévia do anúncio em outra guia. **Gerenciador** abre o anúncio no Gerenciador de Anúncios.
 - Campanhas e anúncios novos aparecem sozinhos, inclusive os ativos que ainda não gastaram.
 
-Os dados vêm **direto da API de Marketing do Meta**, que é gratuita. Não depende de Windsor nem de outro serviço pago.
+Os dados vêm **direto da API de Marketing do Meta**, que é gratuita, a cada abertura da página (no máximo 5 minutos de atraso; o botão “Atualizar” busca na hora). Não depende de Windsor nem de outro serviço pago.
 
 ---
 

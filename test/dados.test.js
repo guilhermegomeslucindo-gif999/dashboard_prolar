@@ -28,6 +28,7 @@ function respond(u) {
         actions: [a('video_view', 3000)], conversions: [a('contact_total', 20)], video_thruplay_watched_actions: [a('video_view', 900)] },
       { ad_id: 'A2', ad_name: 'Carrossel cobertura', adset_id: 'S2', adset_name: 'Agendar visita', campaign_id: 'C1', campaign_name: '[SITE] Contato',
         spend: '100', impressions: '8000', reach: '4000', inline_link_clicks: '150',
+        results: [{ indicator: 'actions:offsite_conversion.fb_pixel_custom', values: [{ value: '1' }] }],
         actions: [a('offsite_conversion.fb_pixel_custom', 6), a('offsite_conversion.fb_pixel_lead', 1), a('offsite_conversion.fb_pixel_view_content', 50)],
         conversions: [a('contact_total', 10), a('schedule_total', 4)] },
       { ad_id: 'A3', ad_name: 'Form lançamento', adset_id: 'S3', adset_name: 'Form', campaign_id: 'C2', campaign_name: '[FORM] Leads',
@@ -76,7 +77,7 @@ const run = (query) => new Promise((resolve) => {
 (async () => {
   const { status, body, headers } = await run({ conta: 'net', start: '2026-11-01', end: '2026-11-19' });
   assert.strictEqual(status, 200, JSON.stringify(body));
-  assert.strictEqual(headers['cache-control'], 's-maxage=900, stale-while-revalidate=86400');
+  assert.strictEqual(headers['cache-control'], 's-maxage=300');
   assert.strictEqual(body.conta.slug, 'net');
   assert.strictEqual(body.conta.tema, 'net');
   assert.deepStrictEqual(body.contas.map((c) => c.slug), ['net', 'class']);
@@ -89,7 +90,8 @@ const run = (query) => new Promise((resolve) => {
   assert.strictEqual(ad('A1').m.thruplay, 900);
   assert.strictEqual(ad('A1').formato, 'video');
   assert.strictEqual(ad('A2').chave, 'evento:Agendar', 'evento personalizado do pixel');
-  assert.strictEqual(ad('A2').conv['evento:Agendar'], 6);
+  assert.strictEqual(ad('A2').conv['evento:Agendar'], 1, 'usa a coluna Resultados do Gerenciador, não o total de eventos personalizados');
+  assert.strictEqual(ad('A2').conv.evento_custom, 6);
   assert.strictEqual(ad('A2').conv.agendar, 4);
   assert.strictEqual(ad('A2').conv['evento:VIEW_CONTENT'], 50, 'evento padrão fora da lista');
   assert.strictEqual(ad('A2').conv['evento:LEAD'], undefined, 'lead já é contado em lead_site');
