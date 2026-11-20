@@ -1,0 +1,8 @@
+{
+  "name": "prolar-criativos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Painel de performance de criativos (Meta Ads) da Prolar Netimóveis e Prolar Class — QH4",
+  "engines": { "node": ">=18" },
+  "scripts": { "dev": "vercel dev", "test": "node test/dados.test.js" }
+}

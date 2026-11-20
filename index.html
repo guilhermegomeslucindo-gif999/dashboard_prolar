@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Prolar · Performance de criativos</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FF6B00'/%3E%3Ctext x='32' y='43' font-family='Helvetica,Arial' font-size='30' font-weight='800' fill='white' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+
+/* ---------- Temas ---------- */
+.pr {
+  --sans: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --display: var(--sans);
+  --display-weight: 800;
+  --display-track: -.01em;
+  --num: var(--sans);
+  --num-weight: 700;
+  --radius: 14px;
+  /* Netimóveis · claro */
+  --bg: #F6F4F1; --card: #FFFFFF; --ink: #1C1C1C; --muted: #6E6A66; --line: #E8E3DD; --soft: #F3EFEA;
+  --accent: #FF6B00; --accent-2: #FF3D00; --accent-ink: #FFFFFF; --accent-soft: #FFF0E5;
+  --hero-1: #FF6B00; --hero-2: #FF3D00; --hero-ink: #FFFFFF; --hero-muted: rgba(255,255,255,.82); --hero-line: rgba(255,255,255,.28);
+  --hero-pill-bg: rgba(255,255,255,.16); --hero-pill-on: #FFFFFF; --hero-pill-on-ink: #FF5200;
+  --good: #1F8A5B; --good-soft: #E5F4EC; --bad: #C2410C; --bad-soft: #FDECE3; --warn: #B7791F;
+  --shadow: 0 1px 2px rgba(30,20,10,.04), 0 8px 24px rgba(30,20,10,.06);
+  font-family: var(--sans); color: var(--ink); background: var(--bg); min-height: 100vh;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+}
+.pr.m-escuro { --bg: #121010; --card: #1B1817; --ink: #F4EFEA; --muted: #A69E97; --line: #2D2826; --soft: #231F1D;
+  --accent: #FF7A1A; --accent-2: #FF4D12; --accent-soft: #33200F; --hero-1: #2A1408; --hero-2: #160B06;
+  --hero-pill-on: #FF7A1A; --hero-pill-on-ink: #160B06; --good: #4CC38A; --good-soft: #10291C; --bad: #FF8A5B; --bad-soft: #33170C; --shadow: none; }
+.pr.t-class { font-variant-numeric: lining-nums tabular-nums;
+  --display: "Cormorant Garamond", Georgia, serif; --display-weight: 500; --display-track: .06em;
+  --num: "Cormorant Garamond", Georgia, serif; --num-weight: 600; --radius: 4px;
+  --bg: #F4F1EA; --card: #FFFFFF; --ink: #1F1E1B; --muted: #7A746A; --line: #E4DED2; --soft: #EFEAE0;
+  --accent: #2B2A26; --accent-2: #2B2A26; --accent-ink: #F4F0E6; --accent-soft: #ECE6DA;
+  --hero-1: #1E1D1A; --hero-2: #2B2925; --hero-ink: #E9E2D3; --hero-muted: rgba(233,226,211,.72); --hero-line: rgba(233,226,211,.22);
+  --hero-pill-bg: rgba(233,226,211,.08); --hero-pill-on: #D1CABA; --hero-pill-on-ink: #1E1D1A;
+  --good: #3F6B4F; --good-soft: #E6EEE6; --bad: #9A4B32; --bad-soft: #F4E7E1;
+  --shadow: 0 1px 0 rgba(0,0,0,.03);
+}
+.pr.t-class.m-escuro { --bg: #141412; --card: #1C1C19; --ink: #EDE7DA; --muted: #A49D90; --line: #2E2D29; --soft: #22221F;
+  --accent: #D1CABA; --accent-2: #D1CABA; --accent-ink: #1A1A17; --accent-soft: #2A2925; --hero-1: #0E0E0C; --hero-2: #1C1B18;
+  --good: #8FBF9C; --good-soft: #1A2A1F; --bad: #D89A80; --bad-soft: #2E1F19; }
+
+.pr-wrap { max-width: 1320px; margin-inline: auto; padding: clamp(14px, 2.4vw, 30px); display: flex; flex-direction: column; gap: 18px; }
+.pr p { margin: 0; }
+.pr button, .pr input, .pr select { font-family: var(--sans); }
+
+/* ---------- Topo ---------- */
+.pr-hero { position: relative; overflow: hidden; border-radius: calc(var(--radius) + 6px); color: var(--hero-ink);
+  background: linear-gradient(115deg, var(--hero-1) 0%, var(--hero-2) 100%); padding: clamp(18px, 2.6vw, 30px); display: flex; flex-direction: column; gap: 18px; }
+.t-net .pr-hero::before { content: ""; position: absolute; right: -90px; bottom: -160px; width: 420px; height: 420px; border-radius: 50%;
+  border: 46px solid rgba(255,255,255,.08); pointer-events: none; }
+.t-class .pr-hero::before { content: ""; position: absolute; inset: 10px; border: 1px solid var(--hero-line); border-radius: 2px; pointer-events: none; }
+.pr-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; position: relative; z-index: 1; }
+.pr-brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.pr-logo-net { height: 46px; width: auto; display: block; }
+.pr-logo-class { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.pr-logo-class b { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 30px; letter-spacing: .14em; }
+.pr-logo-class i { font-style: normal; font-family: var(--sans); font-weight: 500; font-size: 13px; letter-spacing: .01em; margin-top: 4px;
+  padding-top: 4px; border-top: 1px solid var(--hero-line); width: 100%; text-align: center; }
+.pr-brand-sep { width: 1px; align-self: stretch; background: var(--hero-line); }
+.pr-brand-txt { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--hero-muted); line-height: 1.6; }
+.t-class .pr-brand-txt { font-weight: 500; letter-spacing: .22em; }
+.pr-seg { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--hero-pill-bg); border: 1px solid var(--hero-line); flex-wrap: wrap; }
+.t-class .pr-seg { border-radius: 3px; }
+.pr-seg button { font-size: 12px; font-weight: 700; color: var(--hero-ink); background: none; border: 0; border-radius: 999px; padding: 8px 14px; cursor: pointer; letter-spacing: .01em; }
+.t-class .pr-seg button { border-radius: 2px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: 11px; }
+.pr-seg button:hover { background: rgba(255,255,255,.12); }
+.pr-seg button.is-on { background: var(--hero-pill-on); color: var(--hero-pill-on-ink); }
+.pr-acct button { font-size: 13px; padding: 9px 18px; }
+.pr-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; position: relative; z-index: 1; }
+.pr-dates { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--hero-pill-bg); border: 1px solid var(--hero-line); }
+.t-class .pr-dates { border-radius: 3px; }
+.pr-dates input { font-size: 12px; font-weight: 700; color: var(--hero-ink); background: transparent; border: 0; padding: 5px 2px; color-scheme: dark; }
+.pr-dates span { font-size: 12px; color: var(--hero-muted); }
+.pr-hero-title { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 20px; }
+.pr-h1 { font-family: var(--display); font-weight: var(--display-weight); letter-spacing: var(--display-track); font-size: clamp(26px, 3.4vw, 40px); line-height: 1.05; margin: 0; }
+.t-class .pr-h1 { text-transform: uppercase; font-size: clamp(26px, 3.2vw, 38px); }
+.pr-h1-sub { color: var(--hero-muted); font-size: 13px; margin-top: 6px !important; }
+.pr-upd { font-size: 12px; color: var(--hero-muted); display: flex; align-items: center; gap: 10px; }
+.pr-refresh { font-size: 12px; font-weight: 700; color: var(--hero-ink); background: var(--hero-pill-bg); border: 1px solid var(--hero-line); border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+.t-class .pr-refresh { border-radius: 3px; }
+.pr-refresh:disabled { opacity: .5; cursor: default; }
+
+/* ---------- Campanhas ---------- */
+.pr-sec-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin: 4px 2px 10px; }
+.pr-h2 { font-family: var(--display); font-weight: var(--display-weight); letter-spacing: var(--display-track); font-size: 20px; margin: 0; }
+.t-class .pr-h2 { font-size: 24px; letter-spacing: .04em; }
+.pr-hint { font-size: 12px; color: var(--muted); }
+.pr-camps { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 10px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.pr-camp { flex: 0 0 auto; width: 248px; scroll-snap-align: start; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 13px 14px; cursor: pointer; display: flex; flex-direction: column; gap: 8px; color: var(--ink); box-shadow: var(--shadow); transition: border-color .15s, transform .15s; }
+.pr-camp:hover { border-color: var(--accent); transform: translateY(-1px); }
+.pr-camp.is-on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset, var(--shadow); }
+.pr-camp-name { font-size: 12.5px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; }
+.pr-camp-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); }
+.pr-camp-kpi { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding-top: 8px; }
+.pr-camp-kpi span { display: block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.pr-camp-kpi b { font-size: 14px; font-weight: 700; }
+.pr-camp.is-all { width: 190px; justify-content: center; background: var(--accent-soft); }
+.pr-camp.is-all .pr-camp-name { font-size: 14px; min-height: 0; }
+.pr-goal { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft);
+  border-radius: 999px; padding: 3px 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+.t-class .pr-goal { border-radius: 2px; color: var(--ink); letter-spacing: .03em; }
+.pr-dot { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 11px; font-weight: 700; color: var(--muted); }
+.pr-dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .5; }
+.pr-dot.is-on { color: var(--good); }
+.pr-dot.is-on::before { opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); }
+
+/* ---------- Resumo ---------- */
+.pr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+.pr-kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 15px; box-shadow: var(--shadow); min-height: 92px; display: flex; flex-direction: column; gap: 5px; }
+.pr-kpi.is-main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.pr-kpi.is-main .pr-klabel, .pr-kpi.is-main .pr-kdef { color: inherit; opacity: .82; }
+.pr-klabel { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.t-class .pr-klabel { letter-spacing: .14em; font-weight: 600; }
+.pr-kval { font-family: var(--num); font-weight: var(--num-weight); font-size: clamp(22px, 2.2vw, 28px); line-height: 1.1; letter-spacing: -.01em; }
+.t-class .pr-kval { font-size: clamp(26px, 2.6vw, 34px); letter-spacing: 0; }
+.pr-kdef { font-size: 11px; color: var(--muted); line-height: 1.3; margin-top: auto; }
+
+/* ---------- Destaques ---------- */
+.pr-tops { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 10px; }
+.pr-top-card { display: flex; gap: 12px; align-items: stretch; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; box-shadow: var(--shadow); min-height: 104px; }
+.pr-top-card img, .pr-top-card .pr-noimg { width: 66px; height: 82px; object-fit: cover; border-radius: calc(var(--radius) - 6px); flex: none; background: var(--soft); }
+.pr-top-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pr-top-tag { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.pr-top-tag.is-good { color: var(--good); } .pr-top-tag.is-bad { color: var(--bad); } .pr-top-tag.is-acc { color: var(--accent); }
+.t-class .pr-top-tag.is-acc { color: var(--ink); }
+.pr-top-name { font-size: 12.5px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pr-top-val { font-size: 12px; color: var(--muted); margin-top: auto; }
+.pr-top-val b { color: var(--ink); font-size: 15px; font-family: var(--num); font-weight: var(--num-weight); }
+.t-class .pr-top-val b { font-size: 19px; }
+
+/* ---------- Ferramentas ---------- */
+.pr-panel { background: var(--card); border: 1px solid var(--line); border-radius: calc(var(--radius) + 4px); padding: clamp(14px, 2vw, 22px); box-shadow: var(--shadow); }
+.pr-tools { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; margin-bottom: 16px; }
+.pr-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pr-field label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.pr-field select, .pr-search { font-size: 13px; font-weight: 600; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; max-width: 100%; }
+.t-class .pr-field select, .t-class .pr-search { border-radius: 2px; }
+.pr-search { min-width: min(100%, 230px); font-weight: 500; }
+.pr-mseg { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--line); background: var(--soft); border-radius: 999px; }
+.t-class .pr-mseg { border-radius: 3px; }
+.pr-mseg button { font-size: 12px; font-weight: 700; color: var(--muted); background: none; border: 0; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.t-class .pr-mseg button { border-radius: 2px; }
+.pr-mseg button.is-on { background: var(--accent); color: var(--accent-ink); }
+.pr-tools .pr-grow { flex: 1 1 auto; }
+.pr-count { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.pr-count b { color: var(--ink); }
+
+/* ---------- Galeria de criativos ---------- */
+.pr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr)); gap: 14px; }
+.pr-ad { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+.pr-ad.is-best { border-color: var(--good); box-shadow: 0 0 0 1px var(--good) inset; }
+.pr-thumb { position: relative; aspect-ratio: 4 / 5; background: var(--soft); overflow: hidden; display: block; }
+.pr-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; display: block; transition: transform .35s ease; }
+.pr-ad:hover .pr-thumb img { transform: scale(1.03); }
+.pr-thumb::after { content: ""; position: absolute; inset: auto 0 0 0; height: 45%; background: linear-gradient(transparent, rgba(0,0,0,.55)); pointer-events: none; }
+.pr-noimg { display: grid; place-items: center; color: var(--muted); font-size: 11px; text-align: center; padding: 8px; }
+.pr-thumb .pr-noimg { position: absolute; inset: 0; }
+.pr-play { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,.42);
+  backdrop-filter: blur(3px); display: grid; place-items: center; pointer-events: none; z-index: 1; }
+.pr-play::after { content: ""; border-left: 14px solid #fff; border-top: 9px solid transparent; border-bottom: 9px solid transparent; margin-left: 4px; }
+.pr-rank { position: absolute; left: 10px; top: 10px; z-index: 1; min-width: 30px; height: 30px; padding: 0 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+  font-weight: 800; font-size: 13px; display: grid; place-items: center; pointer-events: none; }
+.t-class .pr-rank { border-radius: 2px; font-family: "Cormorant Garamond", serif; font-size: 16px; font-weight: 600; }
+.pr-chips { position: absolute; right: 10px; top: 10px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; pointer-events: none; }
+.pr-chip { background: rgba(0,0,0,.55); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; }
+.pr-chip.is-st { background: var(--card); color: var(--muted); }
+.pr-chip.is-st.is-on { color: var(--good); }
+.pr-thumb-res { position: absolute; left: 12px; right: 12px; bottom: 10px; z-index: 1; color: #fff; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; pointer-events: none; }
+.pr-thumb-res b { font-family: var(--num); font-weight: var(--num-weight); font-size: 26px; line-height: 1; display: block; }
+.t-class .pr-thumb-res b { font-size: 32px; }
+.pr-thumb-res span { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; opacity: .9; }
+.pr-ad-body { padding: 12px 12px 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.pr-ad-name { font-size: 13px; font-weight: 700; line-height: 1.3; word-break: break-word; }
+.pr-ad-where { font-size: 11px; color: var(--muted); line-height: 1.35; margin-top: 3px !important; word-break: break-word; }
+.pr-cpr { background: var(--soft); border-radius: calc(var(--radius) - 6px); padding: 9px 10px; display: flex; flex-direction: column; gap: 6px; }
+.pr-cpr-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.pr-cpr-top span { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.pr-cpr-top b { font-family: var(--num); font-weight: var(--num-weight); font-size: 17px; }
+.t-class .pr-cpr-top b { font-size: 21px; }
+.pr-bar { position: relative; height: 6px; background: var(--line); border-radius: 999px; overflow: visible; }
+.pr-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--muted); }
+.pr-bar.is-good i { background: var(--good); } .pr-bar.is-bad i { background: var(--bad); }
+.pr-bar em { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); opacity: .55; border-radius: 1px; }
+.pr-cmp { font-size: 11px; font-weight: 700; color: var(--muted); }
+.pr-cmp.is-good { color: var(--good); } .pr-cmp.is-bad { color: var(--bad); }
+.pr-met { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 6px; }
+.pr-met span { display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.pr-met b { font-size: 13px; font-weight: 700; }
+.pr-links { display: flex; gap: 6px; margin-top: auto; }
+.pr-links a { flex: 1; text-align: center; font-size: 11.5px; font-weight: 700; text-decoration: none; padding: 8px 6px; border-radius: 9px; border: 1px solid var(--line); color: var(--ink); }
+.t-class .pr-links a { border-radius: 2px; letter-spacing: .04em; }
+.pr-links a.is-pri { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.pr-links a:hover { border-color: var(--accent); }
+
+/* ---------- Tabela ---------- */
+.pr-scroll { overflow: auto; max-height: 640px; border: 1px solid var(--line); border-radius: calc(var(--radius) - 2px); }
+.pr-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.pr-table th { position: sticky; top: 0; z-index: 1; background: var(--soft); text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); padding: 10px; border-bottom: 1px solid var(--line); white-space: nowrap; cursor: pointer; user-select: none; }
+.pr-table th.num, .pr-table td.num { text-align: right; }
+.pr-table th[aria-sort]::after { content: " ↓"; color: var(--accent); }
+.pr-table th[aria-sort=ascending]::after { content: " ↑"; }
+.pr-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; white-space: nowrap; }
+.pr-table td.pr-tname { white-space: normal; min-width: 240px; }
+.pr-tname-in { display: flex; align-items: center; gap: 10px; }
+.pr-tname-in img, .pr-tname-in .pr-noimg { width: 40px; height: 50px; object-fit: cover; border-radius: 6px; flex: none; background: var(--soft); }
+.pr-tname-in a { color: inherit; font-weight: 700; text-decoration: none; }
+.pr-tname-in a:hover { text-decoration: underline; }
+.pr-tname-in small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+.pr-table tbody tr:hover td { background: var(--soft); }
+.pr-table .is-good { color: var(--good); font-weight: 700; } .pr-table .is-bad { color: var(--bad); font-weight: 700; }
+
+.pr-empty { padding: 36px 16px; text-align: center; color: var(--muted); font-size: 13px; }
+.pr-error { padding: 14px 16px; border-radius: var(--radius); background: var(--bad-soft); border: 1px solid color-mix(in srgb, var(--bad) 35%, var(--line)); font-size: 14px; line-height: 1.5; }
+.pr-error b { color: var(--bad); }
+.pr-foot { font-size: 11.5px; color: var(--muted); line-height: 1.6; padding: 0 2px; }
+
+/* Carregando */
+.pr.is-loading .pr-kval, .pr.is-loading .pr-camps, .pr.is-loading .pr-tops { opacity: .35; }
+.pr-skel { background: linear-gradient(90deg, var(--soft), var(--line), var(--soft)); background-size: 200% 100%; animation: prShimmer 1.2s linear infinite; border-radius: var(--radius); }
+@keyframes prShimmer { to { background-position: -200% 0; } }
+.pr.is-refreshing .pr-main { opacity: .55; transition: opacity .3s; }
+@media (prefers-reduced-motion: reduce) { .pr-skel { animation: none; } .pr-thumb img { transition: none; } }
+@media (max-width: 640px) { .pr-logo-net { height: 36px; } .pr-logo-class b { font-size: 23px; } .pr-brand-sep, .pr-brand-txt { display: none; } }
+</style>
+</head>
+<body>
+<div class="pr t-net" id="app">
+<div class="pr-wrap">
+
+  <header class="pr-hero" id="topo">
+    <div class="pr-top">
+      <div class="pr-brand">
+        <img class="pr-logo-net" id="logo-net" src="img/logo-net-branco.png" alt="Prolar Netimóveis" width="280" height="80">
+        <div class="pr-logo-class" id="logo-class" hidden aria-label="Prolar Class"><b>PROLAR CLASS</b><i>netimóveis</i></div>
+        <span class="pr-brand-sep"></span>
+        <p class="pr-brand-txt" id="marca-txt">Meta Ads<br>Painel QH4</p>
+      </div>
+      <div class="pr-seg pr-acct" role="group" aria-label="Conta de anúncios" id="contas">
+        <button type="button" data-conta="net">Netimóveis</button>
+        <button type="button" data-conta="class">Class</button>
+      </div>
+    </div>
+
+    <div class="pr-hero-title">
+      <div>
+        <h1 class="pr-h1">Performance dos criativos</h1>
+        <p class="pr-h1-sub"><span id="titulo">Prolar Netimóveis</span> · escolha a campanha e veja quais criativos estão trazendo resultado.</p>
+      </div>
+      <div class="pr-upd"><span id="atualizado"></span><button type="button" class="pr-refresh" id="btn-atualizar">↻ Atualizar</button></div>
+    </div>
+
+    <div class="pr-ctl">
+      <div class="pr-seg" role="group" aria-label="Período">
+        <button type="button" data-preset="hoje">Hoje</button>
+        <button type="button" data-preset="7">7 dias</button>
+        <button type="button" data-preset="14">14 dias</button>
+        <button type="button" data-preset="30">30 dias</button>
+        <button type="button" data-preset="mes">Este mês</button>
+        <button type="button" data-preset="anterior">Mês passado</button>
+      </div>
+      <div class="pr-dates">
+        <input class="pr-date" data-param="start" type="date" min="2020-01-01" max="2099-12-31" aria-label="Data inicial">
+        <span>até</span>
+        <input class="pr-date" data-param="end" type="date" min="2020-01-01" max="2099-12-31" aria-label="Data final">
+      </div>
+      <div class="pr-seg" role="group" aria-label="Modo">
+        <button type="button" data-modo="claro">☀ Claro</button>
+        <button type="button" data-modo="escuro">☾ Escuro</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="pr-error" id="erro" hidden></div>
+
+  <section aria-label="Campanhas">
+    <div class="pr-sec-h">
+      <h2 class="pr-h2">Campanhas</h2>
+      <p class="pr-hint" id="camps-hint">Clique numa campanha para ver os criativos dela.</p>
+    </div>
+    <div class="pr-camps" id="camps"></div>
+  </section>
+
+  <section class="pr-kpis" aria-label="Resumo da seleção">
+    <div class="pr-kpi"><span class="pr-klabel">Investimento</span><b class="pr-kval" data-k="spend">—</b><span class="pr-kdef" id="kdef-sel">Na seleção</span></div>
+    <div class="pr-kpi is-main"><span class="pr-klabel" id="klabel-res">Resultados</span><b class="pr-kval" data-k="res">—</b><span class="pr-kdef" id="kdef-res">Objetivo de cada campanha</span></div>
+    <div class="pr-kpi"><span class="pr-klabel">Custo por resultado</span><b class="pr-kval" data-k="cpr">—</b><span class="pr-kdef">Investimento ÷ resultados</span></div>
+    <div class="pr-kpi"><span class="pr-klabel">CTR (link)</span><b class="pr-kval" data-k="ctr">—</b><span class="pr-kdef">Cliques no link ÷ impressões</span></div>
+    <div class="pr-kpi"><span class="pr-klabel">CPM</span><b class="pr-kval" data-k="cpm">—</b><span class="pr-kdef">Custo por mil impressões</span></div>
+    <div class="pr-kpi"><span class="pr-klabel">Criativos ativos</span><b class="pr-kval" data-k="ativos">—</b><span class="pr-kdef" id="kdef-ativos">Rodando agora</span></div>
+  </section>
+
+  <section aria-label="Destaques">
+    <div class="pr-sec-h"><h2 class="pr-h2">Destaques</h2><p class="pr-hint">Entre os criativos da seleção com investimento no período.</p></div>
+    <div class="pr-tops" id="tops"></div>
+  </section>
+
+  <section class="pr-panel pr-main" aria-label="Criativos">
+    <div class="pr-sec-h" style="margin-top:0"><h2 class="pr-h2">Criativos</h2><p class="pr-hint">Clique na capa para ver o anúncio. “Gerenciador” abre direto no Meta.</p></div>
+    <div class="pr-tools">
+      <div class="pr-field"><label for="sel-res">Resultado</label><select id="sel-res"></select></div>
+      <div class="pr-field"><label for="sel-ord">Ordenar por</label><select id="sel-ord">
+        <option value="cpr">Menor custo por resultado</option>
+        <option value="res">Mais resultados</option>
+        <option value="spend">Maior investimento</option>
+        <option value="ctr">Maior CTR</option>
+        <option value="hook">Maior retenção 3s (vídeo)</option>
+        <option value="cpm">Menor CPM</option>
+      </select></div>
+      <div class="pr-field"><label for="sel-conj">Conjunto</label><select id="sel-conj"><option value="">Todos os conjuntos</option></select></div>
+      <div class="pr-field"><label>Mostrar</label><div class="pr-mseg" role="group" aria-label="Quais criativos">
+        <button type="button" data-status="ativos">Ativos</button><button type="button" data-status="todos">Todos do período</button></div></div>
+      <div class="pr-field"><label>Visualização</label><div class="pr-mseg" role="group" aria-label="Visualização">
+        <button type="button" data-vis="galeria">Galeria</button><button type="button" data-vis="tabela">Tabela</button></div></div>
+      <span class="pr-grow"></span>
+      <input class="pr-search" id="busca" type="search" placeholder="Buscar criativo ou conjunto" aria-label="Buscar criativo">
+    </div>
+    <p class="pr-count" id="contagem"></p>
+    <div class="pr-grid" id="grade"></div>
+    <div class="pr-scroll" id="tabela" hidden>
+      <table class="pr-table">
+        <thead><tr>
+          <th data-ord="nome">Criativo</th>
+          <th data-ord="status">Status</th>
+          <th class="num" data-ord="spend">Investido</th>
+          <th class="num" data-ord="res">Resultados</th>
+          <th class="num" data-ord="cpr">Custo/result.</th>
+          <th class="num" data-ord="impressions">Impressões</th>
+          <th class="num" data-ord="ctr">CTR</th>
+          <th class="num" data-ord="cpc">CPC</th>
+          <th class="num" data-ord="cpm">CPM</th>
+          <th class="num" data-ord="hook">Ret. 3s</th>
+          <th class="num" data-ord="hold">ThruPlay</th>
+        </tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+    <p class="pr-empty" id="vazio" hidden>Nenhum criativo com esses filtros.</p>
+  </section>
+
+  <p class="pr-foot">Dados ao vivo da API de Marketing do Meta (guardados por até 15 minutos para abrir rápido; “Atualizar” busca na hora). <b>Resultado</b> = o evento que o conjunto de anúncios otimiza no Meta (ex.: Entre em contato, Agendar, lead de formulário, conversa no WhatsApp); troque em “Resultado” para comparar por outra métrica. <b>Ret. 3s</b> = visualizações de 3 segundos ÷ impressões (vídeos). <b>ThruPlay</b> = ThruPlays ÷ visualizações de 3s. A barra do custo por resultado compara o criativo com a média da seleção (traço). Painel QH4.</p>
+</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var $ = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+  // ---------- Formatos ----------
+  var brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  var int = new Intl.NumberFormat('pt-BR');
+  var pct = function (v) { return (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + '%'; };
+  var F = {
+    spend: brl.format, cpr: brl.format, cpc: brl.format, cpm: brl.format,
+    res: function (v) { return v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }); },
+    impressions: int.format, ativos: int.format, link_clicks: int.format,
+    ctr: pct, hook: pct, hold: pct
+  };
+  var fmt = function (k, v) { return v == null || !isFinite(v) ? '—' : (F[k] || String)(v); };
+  var fmtData = function (iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '—'; };
+
+  // ---------- Datas (São Paulo) ----------
+  var hoje = function () { return new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10); };
+  var soma = function (iso, d) { return new Date(Date.parse(iso + 'T00:00:00Z') + d * 864e5).toISOString().slice(0, 10); };
+  var PRESETS = {
+    hoje: function () { return { start: hoje(), end: hoje() }; },
+    '7': function () { return { start: soma(hoje(), -6), end: hoje() }; },
+    '14': function () { return { start: soma(hoje(), -13), end: hoje() }; },
+    '30': function () { return { start: soma(hoje(), -29), end: hoje() }; },
+    mes: function () { return { start: hoje().slice(0, 8) + '01', end: hoje() }; },
+    anterior: function () { var f = soma(hoje().slice(0, 8) + '01', -1); return { start: f.slice(0, 8) + '01', end: f }; }
+  };
+  var DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+  // ---------- Estado ----------
+  var prefs = {};
+  try { prefs = JSON.parse(localStorage.getItem('prolar-prefs') || '{}'); } catch (e) { prefs = {}; }
+  var url = new URLSearchParams(location.search);
+  var def = PRESETS['7']();
+  var S = {
+    conta: url.get('conta') === 'class' ? 'class' : 'net',
+    start: DAY.test(url.get('inicio') || '') ? url.get('inicio') : def.start,
+    end: DAY.test(url.get('fim') || '') ? url.get('fim') : def.end,
+    campanha: url.get('campanha') || null,
+    conjunto: '', res: 'auto', ord: 'cpr', status: 'ativos', vis: prefs.vis || 'galeria', modo: prefs.modo || 'claro',
+    busca: '', tabOrd: null, tabAsc: false,
+    data: null, error: null, req: 0
+  };
+  var salvaPrefs = function () { try { localStorage.setItem('prolar-prefs', JSON.stringify({ vis: S.vis, modo: S.modo })); } catch (e) { /* sem armazenamento */ } };
+  var salvaUrl = function () {
+    var p = new URLSearchParams();
+    p.set('conta', S.conta); p.set('inicio', S.start); p.set('fim', S.end);
+    if (S.campanha) p.set('campanha', S.campanha);
+    try { history.replaceState(null, '', location.pathname + '?' + p.toString()); } catch (e) { /* ignora */ }
+  };
+
+  // ---------- Dados ----------
+  var CACHE = {};
+  var chave = function (c, a, b) { return c + '|' + a + '|' + b; };
+  function busca(conta, start, end, fresh) {
+    var q = '/api/dados?conta=' + conta + '&start=' + start + '&end=' + end + (fresh ? '&fresh=' + Date.now() : '');
+    return fetch(q, { cache: fresh ? 'no-store' : 'default' })
+      .then(function (r) { return r.json().catch(function () { return { error: 'Resposta inválida do servidor (HTTP ' + r.status + ').' }; }); })
+      .catch(function () { return { error: 'Não foi possível falar com o servidor. Confira a internet e tente de novo.' }; });
+  }
+  function carrega(fresh) {
+    var id = ++S.req, k = chave(S.conta, S.start, S.end);
+    S.error = null;
+    if (!fresh && CACHE[k]) { S.data = CACHE[k]; app.classList.remove('is-loading', 'is-refreshing'); render(); return; }
+    var mesmaConta = S.data && S.data.conta && S.data.conta.slug === S.conta;
+    if (!mesmaConta) S.data = null;
+    app.classList.add(S.data ? 'is-refreshing' : 'is-loading');
+    $('#btn-atualizar').disabled = true;
+    render();
+    busca(S.conta, S.start, S.end, fresh).then(function (j) {
+      if (!j.error) CACHE[k] = j;
+      if (id !== S.req) return;
+      if (j.error) S.error = j.error; else S.data = j;
+      app.classList.remove('is-loading', 'is-refreshing');
+      $('#btn-atualizar').disabled = false;
+      render();
+      if (!j.error) preCarrega();
+    });
+  }
+  // Busca por trás a outra conta no mesmo período, para a troca ser instantânea
+  function preCarrega() {
+    var outra = S.conta === 'net' ? 'class' : 'net', k = chave(outra, S.start, S.end);
+    if (CACHE[k]) return;
+    setTimeout(function () { busca(outra, S.start, S.end).then(function (j) { if (!j.error) CACHE[k] = j; }); }, 1200);
+  }
+
+  // ---------- Cálculos ----------
+  // Qual resultado conta para um item (anúncio ou campanha), conforme o seletor
+  var chaveRes = function (item) { return S.res === 'auto' ? item.chave : S.res; };
+  var resDe = function (item) { var k = chaveRes(item); return k ? (item.conv[k] || 0) : 0; };
+  function deriva(item) {
+    var m = item.m, r = resDe(item);
+    return {
+      spend: m.spend, res: r, cpr: r > 0 ? m.spend / r : null, impressions: m.impressions, link_clicks: m.link_clicks,
+      ctr: m.impressions ? m.link_clicks / m.impressions : null, cpc: m.link_clicks ? m.spend / m.link_clicks : null,
+      cpm: m.impressions ? m.spend / m.impressions * 1000 : null,
+      hook: item.formato === 'video' && m.impressions ? m.video_3s / m.impressions : null,
+      hold: item.formato === 'video' && m.video_3s ? m.thruplay / m.video_3s : null
+    };
+  }
+  var rotulo = function (k) { return !k ? 'Sem resultado definido' : ((S.data && S.data.rotulos[k]) || k); };
+
+  function anunciosDaSelecao() {
+    if (!S.data) return [];
+    return S.data.anuncios.filter(function (a) { return !S.campanha || a.campanha_id === S.campanha; });
+  }
+  function filtrados() {
+    var q = S.busca.trim().toLowerCase();
+    return anunciosDaSelecao()
+      .filter(function (a) { return !S.conjunto || a.conjunto_id === S.conjunto; })
+      .filter(function (a) { return S.status === 'todos' || a.status === 'ACTIVE'; })
+      .filter(function (a) { return !q || (a.nome + ' ' + a.conjunto + ' ' + a.campanha).toLowerCase().indexOf(q) >= 0; })
+      .map(function (a) { return { a: a, d: deriva(a) }; });
+  }
+  var ORD = {
+    cpr: function (x, y) { return nn(x.d.cpr, Infinity) - nn(y.d.cpr, Infinity) || y.d.spend - x.d.spend; },
+    res: function (x, y) { return y.d.res - x.d.res || nn(x.d.cpr, Infinity) - nn(y.d.cpr, Infinity); },
+    spend: function (x, y) { return y.d.spend - x.d.spend; },
+    ctr: function (x, y) { return nn(y.d.ctr, -1) - nn(x.d.ctr, -1); },
+    hook: function (x, y) { return nn(y.d.hook, -1) - nn(x.d.hook, -1); },
+    cpm: function (x, y) { return nn(x.d.cpm, Infinity) - nn(y.d.cpm, Infinity); }
+  };
+  function nn(v, d) { return v == null || !isFinite(v) ? d : v; }
+
+  // Custo por resultado médio de cada tipo de resultado na seleção (para comparar cada criativo)
+  function mediasPorChave(lista) {
+    var t = {};
+    lista.forEach(function (x) {
+      var k = chaveRes(x.a); if (!k) return;
+      var o = t[k] || (t[k] = { spend: 0, res: 0 }); o.spend += x.d.spend; o.res += x.d.res;
+    });
+    var out = {};
+    Object.keys(t).forEach(function (k) { out[k] = t[k].res > 0 ? t[k].spend / t[k].res : null; });
+    return out;
+  }
+
+  // ---------- Desenho ----------
+  var STATUS_A = { ACTIVE: 'Ativo', PAUSED: 'Pausado', CAMPAIGN_PAUSED: 'Campanha pausada', ADSET_PAUSED: 'Conjunto pausado', ARCHIVED: 'Arquivado',
+    DELETED: 'Excluído', IN_PROCESS: 'Em análise', WITH_ISSUES: 'Com problemas', DISAPPROVED: 'Reprovado', PENDING_REVIEW: 'Em revisão',
+    PREAPPROVED: 'Pré-aprovado', PENDING_BILLING_INFO: 'Aguardando pagamento' };
+  var STATUS_C = { ACTIVE: 'Ativa', PAUSED: 'Pausada', ARCHIVED: 'Arquivada', IN_PROCESS: 'Em análise', WITH_ISSUES: 'Com problemas' };
+  var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  var okPreview = function (u) { return /^https:\/\/fb\.me\/[A-Za-z0-9_-]+$/.test(u || ''); };
+  var okImg = function (u) { return /^https:\/\/[a-z0-9.-]+\.(fbcdn\.net|facebook\.com|cdninstagram\.com)\//i.test(u || ''); };
+  var okId = function (id) { return /^\d{5,25}$/.test(id || ''); };
+  var link = function (href, text, cls) { var a = el('a', cls || '', text); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
+  var gerenciador = function (adId) { return 'https://adsmanager.facebook.com/adsmanager/manage/ads?act=' + S.data.conta.id + '&selected_ad_ids=' + adId; };
+  function imagem(a, cls) {
+    if (!okImg(a.capa)) return el('div', 'pr-noimg ' + (cls || ''), 'Sem capa');
+    var i = el('img', cls || ''); i.loading = 'lazy'; i.alt = ''; i.referrerPolicy = 'no-referrer'; i.src = a.capa;
+    i.onerror = function () { var n = el('div', 'pr-noimg ' + (cls || ''), 'Capa indisponível'); if (i.parentNode) i.parentNode.replaceChild(n, i); };
+    return i;
+  }
+
+  function render() {
+    var load = app.classList.contains('is-loading'), refr = app.classList.contains('is-refreshing');
+    app.className = 'pr t-' + S.conta + (S.modo === 'escuro' ? ' m-escuro' : '') + (load ? ' is-loading' : '') + (refr ? ' is-refreshing' : '');
+    document.body.style.background = getComputedStyle(app).backgroundColor;
+    $('#logo-net').hidden = S.conta !== 'net';
+    $('#logo-class').hidden = S.conta !== 'class';
+    document.title = (S.conta === 'class' ? 'Prolar Class' : 'Prolar Netimóveis') + ' · Performance de criativos';
+
+    var atual = Object.keys(PRESETS).find(function (k) { var r = PRESETS[k](); return r.start === S.start && r.end === S.end; });
+    var marca = function (attr, val) { $$('[data-' + attr + ']').forEach(function (b) { b.classList.toggle('is-on', b.getAttribute('data-' + attr) === val); }); };
+    marca('conta', S.conta); marca('preset', atual); marca('modo', S.modo); marca('status', S.status); marca('vis', S.vis);
+    $$('.pr-date').forEach(function (i) { if (i !== document.activeElement) i.value = S[i.getAttribute('data-param')]; });
+
+    var erro = $('#erro'); erro.hidden = !S.error; erro.replaceChildren();
+    if (S.error) erro.append(el('b', '', 'Não foi possível carregar os dados. '), document.createTextNode(S.error));
+
+    var d = S.data;
+    $('#titulo').textContent = d ? d.conta.nome : (S.conta === 'class' ? 'Prolar Class' : 'Prolar Netimóveis');
+    $('#atualizado').textContent = d ? fmtData(S.start) + ' a ' + fmtData(S.end) + ' · atualizado às ' +
+      new Date(d.gerado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) : '';
+    if (d && S.campanha && !d.campanhas.some(function (c) { return c.id === S.campanha; })) S.campanha = null;
+
+    desenhaCampanhas();
+    desenhaSeletores();
+    desenhaResumo();
+    desenhaDestaques();
+    desenhaCriativos();
+  }
+
+  function desenhaCampanhas() {
+    var box = $('#camps'); box.replaceChildren();
+    if (!S.data) { for (var i = 0; i < 4; i++) { var s = el('div', 'pr-camp pr-skel'); s.style.height = '128px'; box.append(s); } return; }
+    var camps = S.data.campanhas.slice().sort(function (a, b) { return ((b.status === 'ACTIVE') - (a.status === 'ACTIVE')) || b.m.spend - a.m.spend; });
+    var todos = el('button', 'pr-camp is-all' + (S.campanha ? '' : ' is-on'));
+    todos.type = 'button';
+    todos.append(el('span', 'pr-camp-name', 'Todas as campanhas'), el('span', 'pr-camp-row', camps.length + (camps.length === 1 ? ' campanha' : ' campanhas') + ' no período'));
+    todos.onclick = function () { escolheCampanha(null); };
+    box.append(todos);
+    camps.forEach(function (c) {
+      var dd = deriva(c);
+      var b = el('button', 'pr-camp' + (c.id === S.campanha ? ' is-on' : '')); b.type = 'button';
+      b.setAttribute('aria-pressed', c.id === S.campanha ? 'true' : 'false');
+      var row = el('span', 'pr-camp-row');
+      row.append(el('span', 'pr-dot' + (c.status === 'ACTIVE' ? ' is-on' : ''), STATUS_C[c.status] || c.status || '—'), el('span', 'pr-goal', rotulo(chaveRes(c))));
+      var kpi = el('span', 'pr-camp-kpi');
+      [['Investido', fmt('spend', dd.spend)], ['Result.', fmt('res', dd.res)], ['Custo/res.', fmt('cpr', dd.cpr)]].forEach(function (p) {
+        var x = el('span'); x.append(el('span', '', p[0]), el('b', '', p[1])); kpi.append(x);
+      });
+      b.append(el('span', 'pr-camp-name', c.nome), row, kpi);
+      b.title = c.nome;
+      b.onclick = function () { escolheCampanha(S.campanha === c.id ? null : c.id); };
+      box.append(b);
+    });
+    var on = box.querySelector('.is-on');
+    if (on && on.scrollIntoView && !on.classList.contains('is-all')) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  function desenhaSeletores() {
+    // Resultado
+    var sel = $('#sel-res'), d = S.data;
+    var chaves = {};
+    if (d) anunciosDaSelecao().forEach(function (a) { Object.keys(a.conv).forEach(function (k) { if (a.conv[k] > 0) chaves[k] = 1; }); if (a.chave) chaves[a.chave] = 1; });
+    ['alcance', 'engajamento'].forEach(function (k) { delete chaves[k]; });
+    var camp = d && S.campanha ? d.campanhas.find(function (c) { return c.id === S.campanha; }) : null;
+    var autoTxt = camp && camp.chave ? 'Objetivo da campanha (' + rotulo(camp.chave) + ')' : 'Objetivo de cada campanha';
+    sel.replaceChildren(new Option(autoTxt, 'auto'));
+    Object.keys(chaves).sort(function (a, b) { return rotulo(a).localeCompare(rotulo(b)); }).forEach(function (k) { sel.append(new Option(rotulo(k), k)); });
+    if (S.res !== 'auto' && !chaves[S.res]) sel.append(new Option(rotulo(S.res), S.res));
+    sel.value = S.res;
+    $('#sel-ord').value = S.ord;
+    // Conjuntos da seleção
+    var cs = $('#sel-conj'), vistos = {};
+    cs.replaceChildren(new Option('Todos os conjuntos', ''));
+    anunciosDaSelecao().forEach(function (a) { if (a.conjunto_id && !vistos[a.conjunto_id]) { vistos[a.conjunto_id] = 1; cs.append(new Option(a.conjunto || a.conjunto_id, a.conjunto_id)); } });
+    if (S.conjunto && !vistos[S.conjunto]) S.conjunto = '';
+    cs.value = S.conjunto;
+  }
+
+  function desenhaResumo() {
+    var lista = anunciosDaSelecao().map(function (a) { return { a: a, d: deriva(a) }; });
+    var t = { spend: 0, res: 0, imp: 0, link: 0 };
+    lista.forEach(function (x) { t.spend += x.d.spend; t.res += x.d.res; t.imp += x.d.impressions; t.link += x.d.link_clicks; });
+    var ativos = lista.filter(function (x) { return x.a.status === 'ACTIVE'; }).length;
+    var v = { spend: t.spend, res: t.res, cpr: t.res ? t.spend / t.res : null, ctr: t.imp ? t.link / t.imp : null, cpm: t.imp ? t.spend / t.imp * 1000 : null, ativos: ativos };
+    $$('[data-k]').forEach(function (e) { e.textContent = S.data ? fmt(e.getAttribute('data-k'), v[e.getAttribute('data-k')]) : '—'; });
+    var camp = S.data && S.campanha ? S.data.campanhas.find(function (c) { return c.id === S.campanha; }) : null;
+    $('#kdef-sel').textContent = camp ? 'Nesta campanha' : 'Todas as campanhas';
+    var k = S.res !== 'auto' ? S.res : camp ? camp.chave : null;
+    $('#klabel-res').textContent = k ? rotulo(k) : 'Resultados';
+    $('#kdef-res').textContent = S.res !== 'auto' ? 'Métrica escolhida' : camp ? 'Objetivo da campanha' : 'Cada campanha no seu objetivo';
+  }
+
+  function desenhaDestaques() {
+    var box = $('#tops'); box.replaceChildren();
+    if (!S.data) { for (var i = 0; i < 3; i++) { var s = el('div', 'pr-top-card pr-skel'); box.append(s); } return; }
+    var lista = anunciosDaSelecao().map(function (a) { return { a: a, d: deriva(a) }; }).filter(function (x) { return x.d.spend > 0; });
+    if (!lista.length) { box.append(el('p', 'pr-empty', 'Nenhum criativo com investimento neste período.')); return; }
+    var medio = lista.reduce(function (s, x) { return s + x.d.spend; }, 0) / lista.length;
+    var comRes = lista.filter(function (x) { return x.d.res > 0 && x.d.spend >= medio * 0.15; });
+    var melhor = comRes.slice().sort(ORD.cpr)[0];
+    var mais = lista.slice().sort(ORD.res)[0];
+    var semRes = lista.filter(function (x) { return x.d.res === 0; }).sort(ORD.spend)[0];
+    var pior = semRes || comRes.slice().sort(ORD.cpr).reverse()[0];
+    var card = function (tag, cls, x, valLabel, val) {
+      var c = el('div', 'pr-top-card');
+      if (!x) { c.append(el('div', 'pr-top-body')); c.firstChild.append(el('span', 'pr-top-tag ' + cls, tag), el('span', 'pr-top-val', 'Sem dados suficientes')); return c; }
+      var body = el('div', 'pr-top-body');
+      var v = el('span', 'pr-top-val'); v.append(document.createTextNode(valLabel + ' '), el('b', '', val));
+      body.append(el('span', 'pr-top-tag ' + cls, tag), el('span', 'pr-top-name', x.a.nome), v);
+      var img = imagem(x.a);
+      if (okPreview(x.a.preview)) { var l = link(x.a.preview, ''); l.append(img); l.setAttribute('aria-label', 'Ver ' + x.a.nome); c.append(l); } else c.append(img);
+      c.append(body);
+      return c;
+    };
+    box.append(card('Melhor custo por resultado', 'is-good', melhor, melhor ? rotulo(chaveRes(melhor.a)) + ' a' : '', melhor ? fmt('cpr', melhor.d.cpr) : ''));
+    box.append(card('Mais resultados', 'is-acc', mais && mais.d.res > 0 ? mais : null, mais ? fmt('res', mais.d.res) + ' ·' : '', mais ? fmt('cpr', mais.d.cpr) + ' cada' : ''));
+    box.append(card(semRes ? 'Atenção: gastou sem resultado' : 'Maior custo por resultado', 'is-bad', pior,
+      pior ? (semRes ? 'Investido' : rotulo(chaveRes(pior.a)) + ' a') : '', pior ? (semRes ? fmt('spend', pior.d.spend) : fmt('cpr', pior.d.cpr)) : ''));
+  }
+
+  function desenhaCriativos() {
+    var grade = $('#grade'), tb = $('#tb');
+    grade.replaceChildren(); tb.replaceChildren();
+    $('#grade').hidden = S.vis !== 'galeria';
+    $('#tabela').hidden = S.vis !== 'tabela';
+    if (!S.data) {
+      $('#vazio').hidden = true; $('#contagem').textContent = '';
+      for (var i = 0; i < 4; i++) { var s = el('div', 'pr-ad pr-skel'); s.style.height = '420px'; grade.append(s); }
+      return;
+    }
+    var lista = filtrados();
+    var ordem = S.vis === 'tabela' && S.tabOrd ? ordemTabela() : ORD[S.ord];
+    lista.sort(ordem);
+    var medias = mediasPorChave(anunciosDaSelecao().map(function (a) { return { a: a, d: deriva(a) }; }));
+    var melhorId = null;
+    var cand = lista.filter(function (x) { return x.d.res > 0; }).slice().sort(ORD.cpr)[0];
+    if (cand) melhorId = cand.a.id;
+    $('#vazio').hidden = lista.length > 0;
+    var cnt = $('#contagem'); cnt.replaceChildren();
+    cnt.append(el('b', '', String(lista.length)), document.createTextNode(lista.length === 1 ? ' criativo' : ' criativos'),
+      document.createTextNode(S.status === 'ativos' ? ' ativos' : ' com entrega no período'));
+
+    lista.forEach(function (x, i) {
+      var a = x.a, dd = x.d, k = chaveRes(a), media = k ? medias[k] : null;
+      var cmp = dd.cpr != null && media ? dd.cpr / media : null;
+      var cls = cmp == null ? '' : cmp <= 0.9 ? 'is-good' : cmp >= 1.15 ? 'is-bad' : '';
+      var st = STATUS_A[a.status] || a.status || '—';
+
+      // --- Card ---
+      var card = el('article', 'pr-ad' + (a.id === melhorId ? ' is-best' : ''));
+      var thumb = okPreview(a.preview) ? link(a.preview, '', 'pr-thumb') : el('div', 'pr-thumb');
+      if (okPreview(a.preview)) thumb.setAttribute('aria-label', 'Ver o anúncio ' + a.nome);
+      thumb.append(imagem(a));
+      if (a.formato === 'video') thumb.append(el('span', 'pr-play'));
+      thumb.append(el('span', 'pr-rank', String(i + 1)));
+      var chips = el('span', 'pr-chips');
+      chips.append(el('span', 'pr-chip is-st' + (a.status === 'ACTIVE' ? ' is-on' : ''), st), el('span', 'pr-chip', a.formato === 'video' ? 'Vídeo' : 'Imagem'));
+      thumb.append(chips);
+      var tr = el('span', 'pr-thumb-res');
+      var tl = el('span'); tl.append(el('b', '', fmt('res', dd.res)), el('span', '', k ? rotulo(k) : 'Resultados'));
+      tr.append(tl);
+      thumb.append(tr);
+
+      var body = el('div', 'pr-ad-body');
+      var nm = el('div'); nm.append(el('p', 'pr-ad-name', a.nome), el('p', 'pr-ad-where', a.conjunto + (S.campanha ? '' : ' · ' + a.campanha)));
+      var cpr = el('div', 'pr-cpr');
+      var top = el('div', 'pr-cpr-top'); top.append(el('span', '', 'Custo por resultado'), el('b', '', fmt('cpr', dd.cpr)));
+      cpr.append(top);
+      if (cmp != null) {
+        var bar = el('div', 'pr-bar ' + cls), escala = Math.max(media * 2, dd.cpr) || 1;
+        var fill = el('i'); fill.style.width = Math.min(100, dd.cpr / escala * 100) + '%';
+        var tick = el('em'); tick.style.left = Math.min(100, media / escala * 100) + '%'; tick.title = 'Média da seleção: ' + fmt('cpr', media);
+        bar.append(fill, tick); cpr.append(bar);
+        var dif = Math.round((cmp - 1) * 100);
+        cpr.append(el('span', 'pr-cmp ' + cls, dif === 0 ? 'Na média da seleção (' + fmt('cpr', media) + ')' :
+          Math.abs(dif) + '% ' + (dif < 0 ? 'mais barato' : 'mais caro') + ' que a média (' + fmt('cpr', media) + ')'));
+      } else if (dd.spend > 0) {
+        cpr.append(el('span', 'pr-cmp is-bad', 'Investiu ' + fmt('spend', dd.spend) + ' sem resultado'));
+      } else {
+        cpr.append(el('span', 'pr-cmp', 'Ainda sem investimento no período'));
+      }
+      var met = el('div', 'pr-met');
+      var vid = a.formato === 'video';
+      [['Investido', fmt('spend', dd.spend)], ['CTR', fmt('ctr', dd.ctr)], ['CPC', fmt('cpc', dd.cpc)],
+        ['CPM', fmt('cpm', dd.cpm)], [vid ? 'Ret. 3s' : 'Impressões', vid ? fmt('hook', dd.hook) : fmt('impressions', dd.impressions)],
+        [vid ? 'ThruPlay' : 'Cliques', vid ? fmt('hold', dd.hold) : fmt('link_clicks', dd.link_clicks)]].forEach(function (p) {
+        var c = el('div'); c.append(el('span', '', p[0]), el('b', '', p[1])); met.append(c);
+      });
+      var links = el('div', 'pr-links');
+      if (okPreview(a.preview)) links.append(link(a.preview, 'Ver anúncio ↗', 'is-pri'));
+      if (okId(a.id)) links.append(link(gerenciador(a.id), 'Gerenciador ↗'));
+      body.append(nm, cpr, met, links);
+      card.append(thumb, body);
+      grade.append(card);
+
+      // --- Linha da tabela ---
+      var row = el('tr');
+      var td = function (t, c) { var z = el('td', c, t); row.append(z); return z; };
+      var cell = td('', 'pr-tname'), inner = el('div', 'pr-tname-in');
+      inner.append(imagem(a));
+      var tx = el('div');
+      tx.append(okPreview(a.preview) ? link(a.preview, a.nome) : el('span', '', a.nome), el('small', '', a.conjunto + (S.campanha ? '' : ' · ' + a.campanha)));
+      inner.append(tx); cell.append(inner);
+      td(st);
+      td(fmt('spend', dd.spend), 'num');
+      td(fmt('res', dd.res), 'num');
+      td(fmt('cpr', dd.cpr), 'num ' + cls);
+      td(fmt('impressions', dd.impressions), 'num');
+      td(fmt('ctr', dd.ctr), 'num');
+      td(fmt('cpc', dd.cpc), 'num');
+      td(fmt('cpm', dd.cpm), 'num');
+      td(fmt('hook', dd.hook), 'num');
+      td(fmt('hold', dd.hold), 'num');
+      tb.append(row);
+    });
+    $$('.pr-table th').forEach(function (th) {
+      var on = S.tabOrd === th.getAttribute('data-ord');
+      if (on) th.setAttribute('aria-sort', S.tabAsc ? 'ascending' : 'descending'); else th.removeAttribute('aria-sort');
+    });
+  }
+  function ordemTabela() {
+    var k = S.tabOrd, dir = S.tabAsc ? 1 : -1;
+    return function (x, y) {
+      if (k === 'nome') return dir * x.a.nome.localeCompare(y.a.nome);
+      if (k === 'status') return dir * (x.a.status || '').localeCompare(y.a.status || '');
+      var vx = x.d[k], vy = y.d[k];
+      if (vx == null && vy == null) return 0; if (vx == null) return 1; if (vy == null) return -1;
+      return dir * (vx - vy);
+    };
+  }
+
+  // ---------- Controles ----------
+  function escolheCampanha(id) { S.campanha = id; S.conjunto = ''; salvaUrl(); render(); }
+  var mudaPeriodo = function (p) { S.start = p.start; S.end = p.end; salvaUrl(); carrega(false); };
+  $$('[data-conta]').forEach(function (b) { b.addEventListener('click', function () {
+    var c = b.getAttribute('data-conta'); if (c === S.conta) return;
+    S.conta = c; S.campanha = null; S.conjunto = ''; S.res = 'auto'; salvaUrl(); carrega(false);
+  }); });
+  $$('[data-preset]').forEach(function (b) { b.addEventListener('click', function () { mudaPeriodo(PRESETS[b.getAttribute('data-preset')]()); }); });
+  $$('.pr-date').forEach(function (i) {
+    i.addEventListener('change', function () {
+      if (!i.value || !i.validity.valid) return;
+      var p = { start: S.start, end: S.end }; p[i.getAttribute('data-param')] = i.value;
+      if (p.start > p.end) return;
+      mudaPeriodo(p);
+    });
+    i.addEventListener('blur', function () { i.value = S[i.getAttribute('data-param')]; });
+  });
+  $$('[data-modo]').forEach(function (b) { b.addEventListener('click', function () { S.modo = b.getAttribute('data-modo'); salvaPrefs(); render(); }); });
+  $$('[data-status]').forEach(function (b) { b.addEventListener('click', function () { S.status = b.getAttribute('data-status'); render(); }); });
+  $$('[data-vis]').forEach(function (b) { b.addEventListener('click', function () { S.vis = b.getAttribute('data-vis'); salvaPrefs(); render(); }); });
+  $('#sel-res').addEventListener('change', function (e) { S.res = e.target.value; render(); });
+  $('#sel-ord').addEventListener('change', function (e) { S.ord = e.target.value; S.tabOrd = null; render(); });
+  $('#sel-conj').addEventListener('change', function (e) { S.conjunto = e.target.value; render(); });
+  $('#busca').addEventListener('input', function (e) { S.busca = e.target.value; desenhaCriativos(); });
+  $$('.pr-table th').forEach(function (th) { th.addEventListener('click', function () {
+    var k = th.getAttribute('data-ord');
+    if (S.tabOrd === k) S.tabAsc = !S.tabAsc; else { S.tabOrd = k; S.tabAsc = k === 'cpr' || k === 'cpc' || k === 'cpm' || k === 'nome'; }
+    desenhaCriativos();
+  }); });
+  $('#btn-atualizar').addEventListener('click', function () { carrega(true); });
+  var ultima = Date.now();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - ultima > 600000) { ultima = Date.now(); carrega(false); } });
+
+  salvaUrl();
+  carrega(false);
+})();
+</script>
+</body>
+</html>
