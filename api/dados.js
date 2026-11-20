@@ -53,7 +53,7 @@ module.exports = async function handler(req, res) {
     body.contas = CONTAS.map((c) => ({ slug: c.slug, nome: c.nome, tema: c.tema }));
     body.gerado_em = new Date().toISOString();
     // Cache na Vercel de 5 minutos: um Ctrl+Shift+R mostra no máximo 5 minutos de atraso (o botão Atualizar busca na hora).
-    return send(res, 200, body, q.fresh ? 'no-store' : 's-maxage=300');
+    return send(res, 200, body, q.fresh ? 'no-store' : 's-maxage=300, stale-if-error=86400');
   } catch (err) {
     return send(res, err.status || 500, { error: err.message || 'Erro ao buscar os dados.', code: err.code || null });
   }

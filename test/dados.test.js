@@ -17,6 +17,7 @@ function respond(u) {
     return { data: [
       { campaign_id: 'C1', campaign_name: '[SITE] Contato', spend: '300', impressions: '20000', reach: '9000', inline_link_clicks: '400',
         actions: [a('link_click', 410), a('lead', 2)], conversions: [a('contact_total', 30), a('contact_website', 30)] },
+      { campaign_id: 'C_OLD', campaign_name: 'Campanha antiga parada', spend: '0', impressions: '0' },
       { campaign_id: 'C2', campaign_name: '[FORM] Leads', spend: '200', impressions: '15000', reach: '7000', inline_link_clicks: '90',
         actions: [a('onsite_conversion.lead_grouped', 25), a('lead', 25)] },
     ] };
@@ -31,6 +32,9 @@ function respond(u) {
         results: [{ indicator: 'actions:offsite_conversion.fb_pixel_custom', values: [{ value: '1' }] }],
         actions: [a('offsite_conversion.fb_pixel_custom', 6), a('offsite_conversion.fb_pixel_lead', 1), a('offsite_conversion.fb_pixel_view_content', 50)],
         conversions: [a('contact_total', 10), a('schedule_total', 4)] },
+      { ad_id: 'A_OLD', ad_name: 'Anúncio antigo', adset_id: 'S_OLD', campaign_id: 'C_OLD', spend: '0', impressions: '0' },
+      { ad_id: 'A4', ad_name: 'Agendar sem results', adset_id: 'S2', adset_name: 'Agendar visita', campaign_id: 'C1', campaign_name: '[SITE] Contato',
+        spend: '30', impressions: '900', inline_link_clicks: '10', actions: [a('offsite_conversion.fb_pixel_custom', 2)] },
       { ad_id: 'A3', ad_name: 'Form lançamento', adset_id: 'S3', adset_name: 'Form', campaign_id: 'C2', campaign_name: '[FORM] Leads',
         spend: '200', impressions: '15000', reach: '7000', inline_link_clicks: '90', actions: [a('onsite_conversion.lead_grouped', 25), a('lead', 25)] },
     ] };
@@ -56,6 +60,7 @@ function respond(u) {
       S3: { id: 'S3', campaign_id: 'C2', optimization_goal: 'LEAD_GENERATION', promoted_object: { page_id: '1' } },
       A2: { id: 'A2', name: 'Carrossel cobertura', effective_status: 'PAUSED', campaign_id: 'C1', adset_id: 'S2', adset: { id: 'S2', name: 'Agendar visita' },
         preview_shareable_link: 'https://fb.me/a2', creative: { image_url: 'https://scontent.xx.fbcdn.net/a2.jpg', object_type: 'SHARE' } },
+      A4: { id: 'A4', name: 'Agendar sem results', effective_status: 'PAUSED', campaign_id: 'C1', adset_id: 'S2', adset: { id: 'S2', name: 'Agendar visita' }, creative: {} },
       A3: { id: 'A3', name: 'Form lançamento', effective_status: 'CAMPAIGN_PAUSED', campaign_id: 'C2', adset_id: 'S3', adset: { id: 'S3', name: 'Form' },
         preview_shareable_link: 'https://fb.me/a3', creative: { image_url: 'https://scontent.xx.fbcdn.net/a3.jpg' } },
     };
@@ -77,7 +82,7 @@ const run = (query) => new Promise((resolve) => {
 (async () => {
   const { status, body, headers } = await run({ conta: 'net', start: '2026-11-01', end: '2026-11-19' });
   assert.strictEqual(status, 200, JSON.stringify(body));
-  assert.strictEqual(headers['cache-control'], 's-maxage=300');
+  assert.strictEqual(headers['cache-control'], 's-maxage=300, stale-if-error=86400');
   assert.strictEqual(body.conta.slug, 'net');
   assert.strictEqual(body.conta.tema, 'net');
   assert.deepStrictEqual(body.contas.map((c) => c.slug), ['net', 'class']);
@@ -103,6 +108,12 @@ const run = (query) => new Promise((resolve) => {
   assert.strictEqual(ad('A2').capa, 'https://scontent.xx.fbcdn.net/a2.jpg');
   assert.strictEqual(ad('A3').chave, 'formulario');
   assert.strictEqual(ad('A3').conv.formulario, 25);
+  // Linhas sem entrega no período ficam de fora (e não geram consultas extras)
+  assert.ok(!body.anuncios.some((x) => x.id === 'A_OLD'));
+  assert.ok(!body.campanhas.some((x) => x.id === 'C_OLD'));
+  assert.ok(!pedidos.some((p) => /A_OLD|C_OLD|S_OLD/.test(p)), 'não busca detalhes de quem não rodou');
+  // Evento personalizado sem a coluna Resultados, com o campo aceito pela API → zero, como no Gerenciador
+  assert.strictEqual(ad('A4').conv['evento:Agendar'], 0);
   // Anúncio ativo sem gasto aparece
   assert.strictEqual(ad('A9').chave, 'formulario');
   assert.strictEqual(ad('A9').m.spend, 0);
