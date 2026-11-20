@@ -94,7 +94,7 @@ const run = (query) => new Promise((resolve) => {
   assert.strictEqual(ad('A2').conv['evento:VIEW_CONTENT'], 50, 'evento padrão fora da lista');
   assert.strictEqual(ad('A2').conv['evento:LEAD'], undefined, 'lead já é contado em lead_site');
   assert.deepStrictEqual(ad('A2').otimizacao, { objetivo: 'OFFSITE_CONVERSIONS', evento: 'OTHER', evento_nome: 'Agendar', conversao_id: null });
-  assert.strictEqual(body.rotulos['evento:Agendar'], 'Evento: Agendar');
+  assert.strictEqual(body.rotulos['evento:Agendar'], 'Agendar');
   assert.strictEqual(body.rotulos['evento:VIEW_CONTENT'], 'Evento: View content');
   assert.strictEqual(ad('A2').conv.contato, 10);
   assert.strictEqual(ad('A2').status, 'PAUSED');
