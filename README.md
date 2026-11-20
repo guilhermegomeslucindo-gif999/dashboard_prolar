@@ -14,15 +14,12 @@ Os dados vêm **direto da API de Marketing do Meta**, que é gratuita, a cada ab
 
 ---
 
-## Variações de visualização
+## Páginas
 
-Além do painel principal (`/`), há três variações que usam os mesmos dados e o mesmo cache (uma consulta por conta e período, compartilhada entre elas):
+- `/` · painel principal: capa com os números, grade com todos os criativos da campanha escolhida, matriz de decisão e o que fazer com cada criativo.
+- `/anterior` · versão anterior do painel, guardada por segurança.
 
-- `/v1` · **Central de análise**: campanhas na lateral, ranking em tabela e ficha completa do criativo ao clicar.
-- `/v2` · **Apresentação**: números grandes, pódio dos 3 melhores e matriz de decisão. Feita para reunião.
-- `/v3` · **Comparador**: diagnóstico em texto, verba por sinal e até 3 criativos lado a lado.
-
-Para trocar o painel principal por uma delas, renomeie o arquivo escolhido para `index.html`. Todas dependem de `nucleo.js`.
+Os dois usam `nucleo.js` (só o principal) e a mesma API, com o mesmo cache de 5 minutos.
 
 ## Configuração (uma vez só)
 
