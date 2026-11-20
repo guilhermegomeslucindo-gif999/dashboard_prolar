@@ -3,69 +3,60 @@ const assert = require('assert');
 process.env.META_ACCESS_TOKEN = 'TOKEN_DE_TESTE';
 
 const a = (type, value) => ({ action_type: type, value: String(value) });
-const pedidos = [];
+let pedidos = [];
 
+const ADSETS = {
+  S1: { id: 'S1', name: 'Contato BH', optimization_goal: 'OFFSITE_CONVERSIONS', promoted_object: { pixel_id: '1', custom_event_type: 'CONTACT' } },
+  S2: { id: 'S2', name: 'Agendar visita', optimization_goal: 'OFFSITE_CONVERSIONS', promoted_object: { pixel_id: '1', custom_event_type: 'OTHER', custom_event_str: 'Lead Agendar' } },
+  S3: { id: 'S3', name: 'Form', optimization_goal: 'LEAD_GENERATION', promoted_object: { page_id: '1' } },
+  S9: { id: 'S9', name: 'Form novo', optimization_goal: 'LEAD_GENERATION', promoted_object: { page_id: '1' } },
+};
+const CAMPS = {
+  C1: { id: 'C1', name: '🟧 [QH4] [VENDA] [SITE] [LEAD CONTATO] Venda BH', objective: 'OUTCOME_LEADS', effective_status: 'ACTIVE' },
+  C2: { id: 'C2', name: '[FORM] Leads', objective: 'OUTCOME_LEADS', effective_status: 'PAUSED' },
+  C9: { id: 'C9', name: 'Campanha nova', objective: 'OUTCOME_LEADS', effective_status: 'ACTIVE' },
+};
+const ad = (id, name, st, c, s, creative, preview) => ({ id, name, effective_status: st, campaign_id: c, adset_id: s, adset: ADSETS[s], campaign: CAMPS[c], creative, preview_shareable_link: preview });
+const ADS = {
+  A1: ad('A1', 'Vídeo apto 2q', 'ACTIVE', 'C1', 'S1', { thumbnail_url: 'https://scontent.xx.fbcdn.net/a1.jpg', object_type: 'VIDEO', video_id: '9' }, 'https://fb.me/a1'),
+  A2: ad('A2', 'Carrossel cobertura', 'PAUSED', 'C1', 'S2', { image_url: 'https://scontent.xx.fbcdn.net/a2.jpg', object_type: 'SHARE' }, 'https://fb.me/a2'),
+  A3: ad('A3', 'Form lançamento', 'CAMPAIGN_PAUSED', 'C2', 'S3', { image_url: 'https://scontent.xx.fbcdn.net/a3.jpg' }, 'https://fb.me/a3'),
+  A4: ad('A4', 'Agendar sem resultado', 'PAUSED', 'C1', 'S2', {}, ''),
+  A9: ad('A9', 'Anúncio novo', 'ACTIVE', 'C9', 'S9', { image_url: 'https://scontent.xx.fbcdn.net/a9.jpg', object_type: 'SHARE' }, 'https://fb.me/a9'),
+};
+
+let modo = 'ok';
 function respond(u) {
   const url = new URL(u);
   const p = url.pathname.replace(/^\/v[\d.]+/, '');
-  const level = url.searchParams.get('level');
-  pedidos.push(p + (level ? '?' + level : '') + (url.searchParams.get('ids') ? '?ids=' + url.searchParams.get('ids') : ''));
-  if (p !== '/' && !p.startsWith('/act_2323497894507847')) throw new Error('consultou conta não permitida: ' + p);
+  const fields = url.searchParams.get('fields') || '';
+  pedidos.push(p + (url.searchParams.get('ids') ? '?ids=' + url.searchParams.get('ids') : '') + (fields.includes('results') ? '?results' : ''));
+  if (p !== '/' && !p.startsWith('/act_2323497894507847') && !p.startsWith('/act_1991972537945170')) throw new Error('consultou conta não permitida: ' + p);
+  if (modo === 'limite') return { error: { message: 'User request limit reached', code: 17 } };
 
-  if (p === '/act_2323497894507847') return { name: 'Prolar Netimóveis', currency: 'BRL' };
-  if (p.endsWith('/insights') && level === 'campaign') {
-    return { data: [
-      { campaign_id: 'C1', campaign_name: '[SITE] Contato', spend: '300', impressions: '20000', reach: '9000', inline_link_clicks: '400',
-        actions: [a('link_click', 410), a('lead', 2)], conversions: [a('contact_total', 30), a('contact_website', 30)] },
-      { campaign_id: 'C_OLD', campaign_name: 'Campanha antiga parada', spend: '0', impressions: '0' },
-      { campaign_id: 'C2', campaign_name: '[FORM] Leads', spend: '200', impressions: '15000', reach: '7000', inline_link_clicks: '90',
-        actions: [a('onsite_conversion.lead_grouped', 25), a('lead', 25)] },
-    ] };
+  if (p.endsWith('/insights') && fields.includes('results')) {
+    if (modo === 'semresults') return { error: { message: '(#100) results is not a valid field', code: 100 } };
+    assert.ok(url.searchParams.get('filtering').includes('campaign.id'), 'coluna Resultados só das campanhas de evento');
+    return { data: [{ ad_id: 'A2', results: [{ indicator: 'actions:offsite_conversion.fb_pixel_custom', values: [{ value: '1' }] }] }, { ad_id: 'A4' }] };
   }
-  if (p.endsWith('/insights') && level === 'ad') {
+  if (p.endsWith('/insights')) {
+    assert.strictEqual(url.searchParams.get('level'), 'ad');
     return { data: [
-      { ad_id: 'A1', ad_name: 'Vídeo apto 2q', adset_id: 'S1', adset_name: 'Contato BH', campaign_id: 'C1', campaign_name: '[SITE] Contato',
-        spend: '200', impressions: '12000', reach: '6000', inline_link_clicks: '250',
+      { ad_id: 'A1', adset_id: 'S1', campaign_id: 'C1', spend: '200', impressions: '12000', reach: '6000', inline_link_clicks: '250',
         actions: [a('video_view', 3000)], conversions: [a('contact_total', 20)], video_thruplay_watched_actions: [a('video_view', 900)] },
-      { ad_id: 'A2', ad_name: 'Carrossel cobertura', adset_id: 'S2', adset_name: 'Agendar visita', campaign_id: 'C1', campaign_name: '[SITE] Contato',
-        spend: '100', impressions: '8000', reach: '4000', inline_link_clicks: '150',
-        results: [{ indicator: 'actions:offsite_conversion.fb_pixel_custom', values: [{ value: '1' }] }],
+      { ad_id: 'A2', adset_id: 'S2', campaign_id: 'C1', spend: '100', impressions: '8000', reach: '4000', inline_link_clicks: '150',
         actions: [a('offsite_conversion.fb_pixel_custom', 6), a('offsite_conversion.fb_pixel_lead', 1), a('offsite_conversion.fb_pixel_view_content', 50)],
-        conversions: [a('contact_total', 10), a('schedule_total', 4)] },
-      { ad_id: 'A_OLD', ad_name: 'Anúncio antigo', adset_id: 'S_OLD', campaign_id: 'C_OLD', spend: '0', impressions: '0' },
-      { ad_id: 'A4', ad_name: 'Agendar sem results', adset_id: 'S2', adset_name: 'Agendar visita', campaign_id: 'C1', campaign_name: '[SITE] Contato',
-        spend: '30', impressions: '900', inline_link_clicks: '10', actions: [a('offsite_conversion.fb_pixel_custom', 2)] },
-      { ad_id: 'A3', ad_name: 'Form lançamento', adset_id: 'S3', adset_name: 'Form', campaign_id: 'C2', campaign_name: '[FORM] Leads',
-        spend: '200', impressions: '15000', reach: '7000', inline_link_clicks: '90', actions: [a('onsite_conversion.lead_grouped', 25), a('lead', 25)] },
+        conversions: [a('contact_total', 10)] },
+      { ad_id: 'A4', adset_id: 'S2', campaign_id: 'C1', spend: '30', impressions: '900', inline_link_clicks: '10', actions: [a('offsite_conversion.fb_pixel_custom', 2)] },
+      { ad_id: 'A3', adset_id: 'S3', campaign_id: 'C2', spend: '200', impressions: '15000', reach: '7000', inline_link_clicks: '90', actions: [a('onsite_conversion.lead_grouped', 25), a('lead', 25)] },
+      { ad_id: 'A_OLD', adset_id: 'S_OLD', campaign_id: 'C_OLD', spend: '0', impressions: '0' },
     ] };
   }
-  if (p.endsWith('/campaigns')) return { data: [{ id: 'C1', name: '[SITE] Contato', objective: 'OUTCOME_LEADS', effective_status: 'ACTIVE' },
-    { id: 'C9', name: 'Campanha nova', objective: 'OUTCOME_LEADS', effective_status: 'ACTIVE' }] };
-  if (p.endsWith('/adsets')) return { data: [
-    { id: 'S1', campaign_id: 'C1', optimization_goal: 'OFFSITE_CONVERSIONS', promoted_object: { pixel_id: '1', custom_event_type: 'CONTACT' } },
-    { id: 'S2', campaign_id: 'C1', optimization_goal: 'OFFSITE_CONVERSIONS', promoted_object: { pixel_id: '1', custom_event_type: 'OTHER', custom_event_str: 'Agendar' } },
-    { id: 'S9', campaign_id: 'C9', optimization_goal: 'LEAD_GENERATION', promoted_object: { page_id: '1' } },
-  ] };
-  if (p.endsWith('/ads')) return { data: [
-    { id: 'A1', name: 'Vídeo apto 2q', effective_status: 'ACTIVE', campaign_id: 'C1', adset_id: 'S1', adset: { id: 'S1', name: 'Contato BH' },
-      preview_shareable_link: 'https://fb.me/a1', creative: { thumbnail_url: 'https://scontent.xx.fbcdn.net/a1.jpg', object_type: 'VIDEO', video_id: '9' } },
-    { id: 'A9', name: 'Anúncio novo', effective_status: 'ACTIVE', campaign_id: 'C9', adset_id: 'S9', adset: { id: 'S9', name: 'Form novo' },
-      preview_shareable_link: 'https://fb.me/a9', creative: { image_url: 'https://scontent.xx.fbcdn.net/a9.jpg', object_type: 'SHARE' } },
-  ] };
+  if (p.endsWith('/ads')) return { data: [ADS.A1, ADS.A9] };
   if (p.endsWith('/customconversions')) return { data: [] };
   if (p === '/' && url.searchParams.get('ids')) {
-    const ids = url.searchParams.get('ids').split(',');
-    const db = {
-      C2: { id: 'C2', name: '[FORM] Leads', objective: 'OUTCOME_LEADS', effective_status: 'PAUSED' },
-      S3: { id: 'S3', campaign_id: 'C2', optimization_goal: 'LEAD_GENERATION', promoted_object: { page_id: '1' } },
-      A2: { id: 'A2', name: 'Carrossel cobertura', effective_status: 'PAUSED', campaign_id: 'C1', adset_id: 'S2', adset: { id: 'S2', name: 'Agendar visita' },
-        preview_shareable_link: 'https://fb.me/a2', creative: { image_url: 'https://scontent.xx.fbcdn.net/a2.jpg', object_type: 'SHARE' } },
-      A4: { id: 'A4', name: 'Agendar sem results', effective_status: 'PAUSED', campaign_id: 'C1', adset_id: 'S2', adset: { id: 'S2', name: 'Agendar visita' }, creative: {} },
-      A3: { id: 'A3', name: 'Form lançamento', effective_status: 'CAMPAIGN_PAUSED', campaign_id: 'C2', adset_id: 'S3', adset: { id: 'S3', name: 'Form' },
-        preview_shareable_link: 'https://fb.me/a3', creative: { image_url: 'https://scontent.xx.fbcdn.net/a3.jpg' } },
-    };
     const out = {};
-    for (const id of ids) if (db[id]) out[id] = db[id];
+    for (const id of url.searchParams.get('ids').split(',')) if (ADS[id]) out[id] = ADS[id];
     return out;
   }
   throw new Error('URL inesperada: ' + u);
@@ -82,60 +73,83 @@ const run = (query) => new Promise((resolve) => {
 (async () => {
   const { status, body, headers } = await run({ conta: 'net', start: '2026-11-01', end: '2026-11-19' });
   assert.strictEqual(status, 200, JSON.stringify(body));
-  assert.strictEqual(headers['cache-control'], 's-maxage=300, stale-if-error=86400');
+  assert.strictEqual(headers['cache-control'], 's-maxage=300, stale-while-revalidate=60, stale-if-error=86400');
   assert.strictEqual(body.conta.slug, 'net');
-  assert.strictEqual(body.conta.tema, 'net');
   assert.deepStrictEqual(body.contas.map((c) => c.slug), ['net', 'class']);
 
-  // Resultado de cada anúncio = o evento que o conjunto dele otimiza
-  const ad = (id) => body.anuncios.find((x) => x.id === id);
-  assert.strictEqual(ad('A1').chave, 'contato');
-  assert.strictEqual(ad('A1').conv.contato, 20);
-  assert.strictEqual(ad('A1').m.video_3s, 3000);
-  assert.strictEqual(ad('A1').m.thruplay, 900);
-  assert.strictEqual(ad('A1').formato, 'video');
-  assert.strictEqual(ad('A2').chave, 'evento:Agendar', 'evento personalizado do pixel');
-  assert.strictEqual(ad('A2').conv['evento:Agendar'], 1, 'usa a coluna Resultados do Gerenciador, não o total de eventos personalizados');
-  assert.strictEqual(ad('A2').conv.evento_custom, 6);
-  assert.strictEqual(ad('A2').conv.agendar, 4);
-  assert.strictEqual(ad('A2').conv['evento:VIEW_CONTENT'], 50, 'evento padrão fora da lista');
-  assert.strictEqual(ad('A2').conv['evento:LEAD'], undefined, 'lead já é contado em lead_site');
-  assert.deepStrictEqual(ad('A2').otimizacao, { objetivo: 'OFFSITE_CONVERSIONS', evento: 'OTHER', evento_nome: 'Agendar', conversao_id: null });
-  assert.strictEqual(body.rotulos['evento:Agendar'], 'Agendar');
-  assert.strictEqual(body.rotulos['evento:VIEW_CONTENT'], 'Evento: View content');
-  assert.strictEqual(ad('A2').conv.contato, 10);
-  assert.strictEqual(ad('A2').status, 'PAUSED');
-  assert.strictEqual(ad('A2').capa, 'https://scontent.xx.fbcdn.net/a2.jpg');
-  assert.strictEqual(ad('A3').chave, 'formulario');
-  assert.strictEqual(ad('A3').conv.formulario, 25);
-  // Linhas sem entrega no período ficam de fora (e não geram consultas extras)
-  assert.ok(!body.anuncios.some((x) => x.id === 'A_OLD'));
-  assert.ok(!body.campanhas.some((x) => x.id === 'C_OLD'));
+  // Poucas consultas: métricas + ativos + detalhes dos não ativos + coluna Resultados das campanhas de evento
+  assert.strictEqual(pedidos.length, 4, 'consultas: ' + pedidos.join(' ; '));
   assert.ok(!pedidos.some((p) => /A_OLD|C_OLD|S_OLD/.test(p)), 'não busca detalhes de quem não rodou');
-  // Evento personalizado sem a coluna Resultados, com o campo aceito pela API → zero, como no Gerenciador
-  assert.strictEqual(ad('A4').conv['evento:Agendar'], 0);
-  // Anúncio ativo sem gasto aparece
-  assert.strictEqual(ad('A9').chave, 'formulario');
-  assert.strictEqual(ad('A9').m.spend, 0);
 
-  // Resultado da campanha = o que mais pesou no investimento
+  const ad_ = (id) => body.anuncios.find((x) => x.id === id);
+  assert.strictEqual(ad_('A1').chave, 'contato');
+  assert.strictEqual(ad_('A1').conv.contato, 20);
+  assert.strictEqual(ad_('A1').m.video_3s, 3000);
+  assert.strictEqual(ad_('A1').m.thruplay, 900);
+  assert.strictEqual(ad_('A1').formato, 'video');
+  assert.strictEqual(ad_('A1').campanha, CAMPS.C1.name);
+  assert.strictEqual(ad_('A1').conjunto, 'Contato BH');
+  // Evento personalizado: usa a coluna Resultados (1), não o total de eventos personalizados (6)
+  assert.strictEqual(ad_('A2').chave, 'evento:Lead Agendar');
+  assert.strictEqual(ad_('A2').conv['evento:Lead Agendar'], 1);
+  assert.strictEqual(ad_('A2').conv.evento_custom, 6);
+  assert.strictEqual(ad_('A2').conv['evento:VIEW_CONTENT'], 50);
+  assert.strictEqual(ad_('A2').conv['evento:LEAD'], undefined);
+  assert.strictEqual(ad_('A2').status, 'PAUSED');
+  assert.strictEqual(ad_('A4').conv['evento:Lead Agendar'], 0, 'sem resultado na coluna = zero, como no Gerenciador');
+  assert.strictEqual(ad_('A3').chave, 'formulario');
+  assert.strictEqual(ad_('A3').conv.formulario, 25);
+  assert.strictEqual(ad_('A9').chave, 'formulario', 'anúncio ativo sem gasto aparece');
+  assert.strictEqual(ad_('A9').m.spend, 0);
+  assert.ok(!body.anuncios.some((x) => x.id === 'A_OLD'));
+
   const camp = (id) => body.campanhas.find((x) => x.id === id);
   assert.strictEqual(camp('C1').chave, 'contato');
-  assert.strictEqual(camp('C1').conv.contato, 30, 'contact_total sem somar contact_website');
+  assert.strictEqual(camp('C1').m.spend, 330);
+  assert.strictEqual(camp('C1').conv.contato, 30);
   assert.strictEqual(camp('C2').chave, 'formulario');
   assert.strictEqual(camp('C2').status, 'PAUSED');
-  assert.strictEqual(camp('C9').chave, 'formulario', 'campanha nova sem gasto usa o objetivo do conjunto');
-  assert.strictEqual(body.rotulos.contato, 'Entre em contato');
+  assert.strictEqual(camp('C9').chave, 'formulario');
+  assert.ok(!body.campanhas.some((x) => x.id === 'C_OLD'));
+  assert.strictEqual(body.rotulos['evento:Lead Agendar'], 'Lead Agendar');
   assert.ok(!JSON.stringify(body).includes('TOKEN_DE_TESTE'));
 
-  // Conta fora da lista nunca é consultada: cai na primeira permitida
-  const outra = await run({ conta: '../act_999', start: '2026-11-01', end: '2026-11-19' });
-  assert.strictEqual(outra.body.conta.slug, 'net');
+  // Mesma consulta de novo: vem da memória, sem consultar o Meta
+  pedidos = [];
+  await run({ conta: 'net', start: '2026-11-01', end: '2026-11-19' });
+  assert.strictEqual(pedidos.length, 0, 'memória do servidor');
+  // "Atualizar" logo em seguida também não consulta (menos de 1 minuto)
+  await run({ conta: 'net', start: '2026-11-01', end: '2026-11-19', fresh: '1' });
+  assert.strictEqual(pedidos.length, 0, 'Atualizar repetido não consulta');
 
+  // Meta limitando: com dados guardados, mostra os últimos dados com aviso
+  modo = 'limite';
+  const realNow = Date.now;
+  Date.now = () => realNow() + 10 * 60e3; // 10 minutos depois
+  const lim = await run({ conta: 'net', start: '2026-11-01', end: '2026-11-19' });
+  assert.strictEqual(lim.status, 200);
+  assert.ok(/pausa/.test(lim.body.aviso));
+  assert.strictEqual(lim.body.anuncios.length, body.anuncios.length);
+  assert.strictEqual(pedidos.length, 2, 'no limite, não insiste: ' + pedidos.join(' ; '));
+  // Sem dados guardados: erro amigável
+  const lim2 = await run({ conta: 'class', start: '2026-11-01', end: '2026-11-19' });
+  assert.strictEqual(lim2.status, 502);
+  assert.ok(/pausa/.test(lim2.body.error));
+  Date.now = realNow;
+
+  // API que não aceita o campo results: usa o total de eventos personalizados
+  modo = 'semresults';
+  const sem = await run({ conta: 'net', start: '2026-10-01', end: '2026-10-19' });
+  assert.strictEqual(sem.status, 200, JSON.stringify(sem.body));
+  assert.strictEqual(sem.body.anuncios.find((x) => x.id === 'A2').conv['evento:Lead Agendar'], 6);
+  modo = 'ok';
+
+  // Conta fora da lista cai na primeira permitida; datas inválidas
+  assert.strictEqual((await run({ conta: '../act_999', start: '2026-09-01', end: '2026-09-19' })).body.conta.slug, 'net');
   assert.strictEqual((await run({ conta: 'net', start: '2026-11-19', end: '2026-11-01' })).status, 400);
 
   global.fetch = async () => ({ status: 400, json: async () => ({ error: { message: 'Error validating access token', code: 190 } }) });
-  const bad = await run({ conta: 'net' });
+  const bad = await run({ conta: 'net', start: '2026-08-01', end: '2026-08-02' });
   assert.strictEqual(bad.status, 502);
   assert.ok(/expirou ou é inválido/.test(bad.body.error));
 

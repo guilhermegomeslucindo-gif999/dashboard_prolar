@@ -2,14 +2,15 @@
 
 Painel de **performance dos criativos** no Meta Ads, feito pela QH4.
 
-- No topo você escolhe a conta, **Netimóveis** ou **Class**, e o painel troca a identidade visual inteira.
+- No topo você escolhe a conta, **Netimóveis** ou **Class**. O layout e a fonte são os mesmos; o painel troca o logo e as cores de cada marca.
+- Os nomes longos das campanhas viram um título curto com etiquetas (ex.: "Mangabeiras", com "Gestão Premium" e "Lead Contato"). O nome completo aparece passando o mouse e na faixa da campanha selecionada.
 - Escolha uma campanha para ver os criativos dela com capa, formato, status, resultados, custo por resultado, CTR, CPC, CPM e, nos vídeos, retenção de 3s e ThruPlay.
 - **Resultado** = o evento que o conjunto de anúncios otimiza no Meta: Entre em contato, Agendar, lead de formulário, lead no site, conversa no WhatsApp, clique etc. Cada campanha usa o próprio objetivo. No seletor “Resultado” dá para trocar a métrica para comparar por outra.
 - Destaques automáticos: melhor custo por resultado, mais resultados e o criativo que gastou sem resultado.
 - Clicar na capa abre a prévia do anúncio em outra guia. **Gerenciador** abre o anúncio no Gerenciador de Anúncios.
 - Campanhas e anúncios novos aparecem sozinhos, inclusive os ativos que ainda não gastaram.
 
-Os dados vêm **direto da API de Marketing do Meta**, que é gratuita, a cada abertura da página (no máximo 5 minutos de atraso; o botão “Atualizar” busca na hora). Não depende de Windsor nem de outro serviço pago.
+Os dados vêm **direto da API de Marketing do Meta**, que é gratuita, a cada abertura da página (no máximo 5 minutos de atraso; o botão “Atualizar” busca de novo, no máximo 1 vez por minuto). Não depende de Windsor nem de outro serviço pago.
 
 ---
 
@@ -33,6 +34,17 @@ Crie um repositório **privado**, por exemplo `prolar-criativos`, e envie todos 
 Se cadastrar a variável depois do primeiro deploy: **Deployments → ⋯ → Redeploy**.
 
 ---
+
+## Limite de consultas do Meta
+
+O Meta limita quantas consultas cada app pode fazer por hora. O painel foi feito para gastar pouco:
+
+- cada abertura faz de 2 a 4 consultas leves (métricas por anúncio, anúncios ativos e, quando preciso, detalhes e a coluna Resultados);
+- a Vercel e o servidor guardam a resposta por 5 minutos, então várias pessoas abrindo ao mesmo tempo não geram consultas novas;
+- o botão **Atualizar** só busca de novo depois de 1 minuto do último clique;
+- se o Meta pedir uma pausa, o painel continua mostrando os últimos dados, com um aviso, em vez de dar erro.
+
+Se mesmo assim o aviso de pausa aparecer com frequência, o app usado no token provavelmente está no nível de acesso básico do Meta. Para aumentar o limite, peça o **Acesso Padrão (Standard Access) de Gerenciamento de Anúncios** para esse app em developers.facebook.com → app → **Análise do app → Permissões e recursos**. É gratuito.
 
 ## Como os números são calculados
 

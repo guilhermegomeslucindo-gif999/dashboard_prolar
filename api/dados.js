@@ -7,6 +7,11 @@
 //   META_API_VERSION   (opcional)    padrão: v23.0
 //
 // As contas que podem ser consultadas ficam em lib/contas.js.
+//
+// Para poupar o limite de consultas do Meta:
+//   - a Vercel guarda cada resposta por 5 minutos (todo mundo que abrir nesse tempo vê a mesma, sem nova consulta);
+//   - o servidor também guarda na memória; "Atualizar" só consulta de novo se a última consulta tiver mais de 1 minuto;
+//   - se o Meta limitar as consultas, o painel mostra os últimos dados bons (até 6 horas) com um aviso, em vez de erro.
 
 const CONTAS = require('../lib/contas.js');
 const criativos = require('../lib/criativos.js');
@@ -14,6 +19,12 @@ const criativos = require('../lib/criativos.js');
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const daysBetween = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 864e5) + 1;
 const todaySP = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+
+const MEMORIA = new Map(); // chave → { em: timestamp, body }
+const FRESCO_MS = 5 * 60e3;
+const MIN_ATUALIZAR_MS = 60e3;
+const RESERVA_MS = 6 * 3600e3;
+const LIMITE = [4, 17, 32, 613, 80004];
 
 function send(res, status, body, cache) {
   res.statusCode = status;
@@ -40,6 +51,16 @@ module.exports = async function handler(req, res) {
   if (start > end) return send(res, 400, { error: 'A data inicial é depois da data final.' });
   if (daysBetween(start, end) > 400) return send(res, 400, { error: 'Escolha um período de até 400 dias.' });
 
+  const chave = conta.slug + '|' + start + '|' + end;
+  const guardado = MEMORIA.get(chave);
+  const idade = guardado ? Date.now() - guardado.em : Infinity;
+  const CACHE_OK = 's-maxage=300, stale-while-revalidate=60, stale-if-error=86400';
+
+  // Memória ainda fresca: responde sem consultar o Meta ("Atualizar" só passa se tiver mais de 1 minuto)
+  if (guardado && (q.fresh ? idade < MIN_ATUALIZAR_MS : idade < FRESCO_MS)) {
+    return send(res, 200, guardado.body, q.fresh ? 'no-store' : CACHE_OK);
+  }
+
   try {
     const body = await criativos({
       token,
@@ -52,9 +73,16 @@ module.exports = async function handler(req, res) {
     body.periodo = { start, end };
     body.contas = CONTAS.map((c) => ({ slug: c.slug, nome: c.nome, tema: c.tema }));
     body.gerado_em = new Date().toISOString();
-    // Cache na Vercel de 5 minutos: um Ctrl+Shift+R mostra no máximo 5 minutos de atraso (o botão Atualizar busca na hora).
-    return send(res, 200, body, q.fresh ? 'no-store' : 's-maxage=300, stale-if-error=86400');
+    MEMORIA.set(chave, { em: Date.now(), body });
+    if (MEMORIA.size > 60) MEMORIA.delete(MEMORIA.keys().next().value);
+    return send(res, 200, body, q.fresh ? 'no-store' : CACHE_OK);
   } catch (err) {
+    // Meta limitou as consultas: mostra os últimos dados bons, se houver, com aviso
+    if (LIMITE.includes(err.code) && guardado && idade < RESERVA_MS) {
+      const body = { ...guardado.body, aviso: 'O Meta pediu uma pausa nas consultas. Mostrando os dados das ' +
+        new Date(guardado.em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }) + '.' };
+      return send(res, 200, body, 'no-store');
+    }
     return send(res, err.status || 500, { error: err.message || 'Erro ao buscar os dados.', code: err.code || null });
   }
 };
