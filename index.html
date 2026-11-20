@@ -304,7 +304,7 @@ html, body { margin: 0; }
   </section>
 
   <section aria-label="Destaques">
-    <div class="pr-sec-h"><h2 class="pr-h2">Destaques</h2><p class="pr-hint">Entre os criativos da seleção com investimento no período.</p></div>
+    <div class="pr-sec-h"><h2 class="pr-h2">Destaques</h2><p class="pr-hint" id="tops-hint">Entre os criativos da seleção com investimento no período.</p></div>
     <div class="pr-tops" id="tops"></div>
   </section>
 
@@ -459,6 +459,11 @@ html, body { margin: 0; }
       hold: item.formato === 'video' && m.video_3s ? m.thruplay / m.video_3s : null
     };
   }
+  // Resultados que não são contato/lead/venda: aparecem no criativo, mas não somam com conversões
+  var NAO_CONV = { engajamento: 1, alcance: 1, thruplay: 1, clique: 1, lpv: 1 };
+  var ehConv = function (k) { return !!k && !NAO_CONV[k]; };
+  // Com uma campanha só (ou uma métrica escolhida) tudo é comparável; em "todas", só conversões entram nas somas
+  var comparavel = function (item) { return S.campanha || S.res !== 'auto' || ehConv(chaveRes(item)); };
   var rotulo = function (k) { return !k ? 'Sem resultado definido' : ((S.data && S.data.rotulos[k]) || k); };
 
   function anunciosDaSelecao() {
@@ -474,8 +479,8 @@ html, body { margin: 0; }
       .map(function (a) { return { a: a, d: deriva(a) }; });
   }
   var ORD = {
-    cpr: function (x, y) { return nn(x.d.cpr, Infinity) - nn(y.d.cpr, Infinity) || y.d.spend - x.d.spend; },
-    res: function (x, y) { return y.d.res - x.d.res || nn(x.d.cpr, Infinity) - nn(y.d.cpr, Infinity); },
+    cpr: function (x, y) { return (comparavel(y.a) - comparavel(x.a)) || nn(x.d.cpr, Infinity) - nn(y.d.cpr, Infinity) || y.d.spend - x.d.spend; },
+    res: function (x, y) { return (comparavel(y.a) - comparavel(x.a)) || y.d.res - x.d.res || nn(x.d.cpr, Infinity) - nn(y.d.cpr, Infinity); },
     spend: function (x, y) { return y.d.spend - x.d.spend; },
     ctr: function (x, y) { return nn(y.d.ctr, -1) - nn(x.d.ctr, -1); },
     hook: function (x, y) { return nn(y.d.hook, -1) - nn(x.d.hook, -1); },
@@ -562,7 +567,8 @@ html, body { margin: 0; }
         var x = el('span'); x.append(el('span', '', p[0]), el('b', '', p[1])); kpi.append(x);
       });
       b.append(el('span', 'pr-camp-name', c.nome), row, kpi);
-      b.title = c.nome;
+      var ot = c.otimizacao;
+      b.title = c.nome + (ot ? '\nOtimiza para: ' + [ot.objetivo, ot.evento_nome || ot.evento].filter(Boolean).join(' · ') : '');
       b.onclick = function () { escolheCampanha(S.campanha === c.id ? null : c.id); };
       box.append(b);
     });
@@ -594,22 +600,29 @@ html, body { margin: 0; }
   function desenhaResumo() {
     var lista = anunciosDaSelecao().map(function (a) { return { a: a, d: deriva(a) }; });
     var t = { spend: 0, res: 0, imp: 0, link: 0 };
-    lista.forEach(function (x) { t.spend += x.d.spend; t.res += x.d.res; t.imp += x.d.impressions; t.link += x.d.link_clicks; });
+    var tc = { spend: 0 };
+    lista.forEach(function (x) {
+      t.spend += x.d.spend; t.imp += x.d.impressions; t.link += x.d.link_clicks;
+      if (comparavel(x.a)) { t.res += x.d.res; tc.spend += x.d.spend; }
+    });
     var ativos = lista.filter(function (x) { return x.a.status === 'ACTIVE'; }).length;
-    var v = { spend: t.spend, res: t.res, cpr: t.res ? t.spend / t.res : null, ctr: t.imp ? t.link / t.imp : null, cpm: t.imp ? t.spend / t.imp * 1000 : null, ativos: ativos };
+    var v = { spend: t.spend, res: t.res, cpr: t.res ? tc.spend / t.res : null, ctr: t.imp ? t.link / t.imp : null, cpm: t.imp ? t.spend / t.imp * 1000 : null, ativos: ativos };
     $$('[data-k]').forEach(function (e) { e.textContent = S.data ? fmt(e.getAttribute('data-k'), v[e.getAttribute('data-k')]) : '—'; });
     var camp = S.data && S.campanha ? S.data.campanhas.find(function (c) { return c.id === S.campanha; }) : null;
     $('#kdef-sel').textContent = camp ? 'Nesta campanha' : 'Todas as campanhas';
     var k = S.res !== 'auto' ? S.res : camp ? camp.chave : null;
     $('#klabel-res').textContent = k ? rotulo(k) : 'Resultados';
-    $('#kdef-res').textContent = S.res !== 'auto' ? 'Métrica escolhida' : camp ? 'Objetivo da campanha' : 'Cada campanha no seu objetivo';
+    $('#kdef-res').textContent = S.res !== 'auto' ? 'Métrica escolhida' : camp ? 'Objetivo da campanha' : 'Contatos, agendamentos, leads e conversas';
+    if (!k && !camp && S.res === 'auto') $('#klabel-res').textContent = 'Conversões';
   }
 
   function desenhaDestaques() {
     var box = $('#tops'); box.replaceChildren();
+    $('#tops-hint').textContent = S.campanha || S.res !== 'auto' ? 'Entre os criativos da seleção com investimento no período.'
+      : 'Entre os criativos de campanhas de conversão (contato, agendamento, lead, conversa), com investimento no período.';
     if (!S.data) { for (var i = 0; i < 3; i++) { var s = el('div', 'pr-top-card pr-skel'); box.append(s); } return; }
-    var lista = anunciosDaSelecao().map(function (a) { return { a: a, d: deriva(a) }; }).filter(function (x) { return x.d.spend > 0; });
-    if (!lista.length) { box.append(el('p', 'pr-empty', 'Nenhum criativo com investimento neste período.')); return; }
+    var lista = anunciosDaSelecao().map(function (a) { return { a: a, d: deriva(a) }; }).filter(function (x) { return x.d.spend > 0 && comparavel(x.a); });
+    if (!lista.length) { box.append(el('p', 'pr-empty', 'Nenhum criativo de conversão com investimento neste período.')); return; }
     var medio = lista.reduce(function (s, x) { return s + x.d.spend; }, 0) / lista.length;
     var comRes = lista.filter(function (x) { return x.d.res > 0 && x.d.spend >= medio * 0.15; });
     var melhor = comRes.slice().sort(ORD.cpr)[0];
